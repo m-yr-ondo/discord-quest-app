@@ -61,6 +61,8 @@ export function useFetchGameList() {
     const gameDB = ref<Game[]>([]);
 
     const allFetchDone = ref(false);
+    const bundledReady = ref(false);
+    const remoteRefreshed = ref(false);
 
     function isValidGameList(data: any): boolean {
         return Array.isArray(data) && data[0] && 'aliases' in data[0] && 'name' in data[0] && 'executables' in data[0];
@@ -78,70 +80,61 @@ export function useFetchGameList() {
         addLog('debug','isReadyBundled: ' + newVal); 
     });
 
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    async function fetchGameList() { 
-        allFetchDone.value = false;
-        addLog('Fetching game list...');
-        // try fetching from the Github mirror first, then Discord. Use bundled as fallback.
+    async function refreshRemoteGameList() {
         try {
-           await Promise.all([executeGH(), executeBundled()]);
-        } catch {
-            addLog('error', 'Error executing fetch for GitHub mirror or bundled game list.');
+            await executeGH();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            addLog('error', 'Error fetching game list from GitHub mirror: ' + message);
         }
 
-        if (errorGH.value) { 
-            fetchError.value = 'Error fetching game list from GitHub mirror.';
-            addLog('error','Error fetching game list from GitHub mirror');
+        if (gameListGHMirror.value && gameListGHMirror.value.length > 0 && isValidGameList(gameListGHMirror.value)) {
+            gameDB.value = gameListGHMirror.value as Game[];
+            remoteRefreshed.value = true;
+            addLog('Using refreshed game list from GitHub mirror. ' + gameListGHMirror.value.length + ' entries.');
+            return;
+        }
+
+        try {
             await executeDiscord();
-            if (errorDiscord.value) {
-                fetchError.value = 'Error fetching game list from Discord.';
-                addLog('error','Error fetching game list from Discord:');
-                if (errorBundled.value) {
-                    fetchError.value = 'Error fetching bundled game list.';
-                    addLog('error','Error fetching bundled game list:');
-                }
-            }
-        }
-        // silently log error for bundled, as it's the last resort.
-        if (errorBundled.value) {
-            addLog('error','Error fetching bundled game list');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            addLog('error', 'Error fetching game list from Discord: ' + message);
         }
 
-        if (fetchError.value) {
-            await message('There was an error fetching the latest game list.' + fetchError.value, {
-                title: 'Game List Fetch Error',
-                kind: 'error',
-                buttons: {
-                    ok: 'OK'
-                }
-            });
+        if (gameListFromDiscord.value && gameListFromDiscord.value.length > 0 && isValidGameList(gameListFromDiscord.value)) {
+            gameDB.value = gameListFromDiscord.value as Game[];
+            remoteRefreshed.value = true;
+            addLog('Using refreshed game list from Discord. ' + gameListFromDiscord.value.length + ' entries.');
+            return;
         }
 
-        if (gameListGHMirror.value && gameListGHMirror.value?.length > 0 && isValidGameList(gameListGHMirror.value)) {
-            gameDB.value = gameListGHMirror.value as Game[] || [];
-            addLog('Using game list from GitHub mirror. ' + gameListGHMirror.value.length + ' entries.');
-        } else if (gameListFromDiscord.value && gameListFromDiscord.value?.length > 0 && isValidGameList(gameListFromDiscord.value)) {
-            gameDB.value = gameListFromDiscord.value as Game[] || [];
-            addLog('Using game list from Discord. ' + gameListFromDiscord.value.length + ' entries.');
-        } else {
-            // bundled is always present.
-            addLog('Using bundled game list as fallback.' + bundledGameList.value.length + ' entries.');
-            gameDB.value = bundledGameList.value;
-        }
-
-        // Set a timeout to delay setting allFetchDone to true, to allow UI to update.
-      
-        timeoutId = setTimeout(() => {
-            allFetchDone.value = true;
-        }, 1800);
-
+        addLog('warning', 'Remote game list refresh failed; keeping the bundled game list.');
     }
 
-    watch(allFetchDone, (newVal) => {
-        if (newVal && timeoutId) {
-            clearTimeout(timeoutId);
+    async function fetchGameList() {
+        allFetchDone.value = false;
+        bundledReady.value = false;
+        remoteRefreshed.value = false;
+        fetchError.value = null;
+        addLog('Fetching bundled game list...');
+
+        try {
+            await executeBundled();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            addLog('error', 'Error fetching bundled game list: ' + message);
         }
-    });
+
+        if (bundledGameList.value.length > 0 && isValidGameList(bundledGameList.value)) {
+            gameDB.value = bundledGameList.value as Game[];
+            addLog('Using bundled game list. ' + bundledGameList.value.length + ' entries.');
+        }
+
+        bundledReady.value = true;
+        allFetchDone.value = true;
+        void refreshRemoteGameList();
+    }
 
     tryOnMounted(async () => {
         await fetchGameList();
@@ -161,6 +154,8 @@ export function useFetchGameList() {
         isLoadingGH,
         isLoadingDiscord,
         isLoadingBundled,
-        allFetchDone
+        allFetchDone,
+        bundledReady,
+        remoteRefreshed
     }
 }

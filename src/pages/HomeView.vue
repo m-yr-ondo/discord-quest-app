@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, useTemplateRef, shallowRef, provide, nextTick, triggerRef } from 'vue';
+import { ref, computed, useTemplateRef, shallowRef, provide, nextTick, triggerRef, watch } from 'vue';
 // import gameListData from '../assets/gamelist.json';
 import { onClickOutside, refDebounced, tryOnMounted } from '@vueuse/core';
 import { useFuse } from '@vueuse/integrations/useFuse'
@@ -17,6 +17,7 @@ import { UseFuseOptions } from '@vueuse/integrations';
 import Fuse from 'fuse.js';
 import { useGlobalState } from '@/composables/app-state';
 import TimedNotification from '@/components/TimedNotification.vue';
+import { loadSavedGameIds, mergeGameCatalogEntry, rehydrateSavedGames, saveSavedGameIds } from '@/services/saved-games';
 
 
 type DialogKey = 
@@ -37,6 +38,8 @@ const {
     isReadyBundled,
     isReadyDiscord,
     allFetchDone,
+    bundledReady,
+    remoteRefreshed,
 } = useFetchGameList()
 const { addLog } = useGlobalState();
 const shouldShowNotificationContainer = computed(() => {
@@ -112,6 +115,44 @@ const gameList = ref<Game[]>([]);
 // const selectedGame = ref<Game | null>(null);
 const selectedGameId = ref<string | null | undefined>(null);
 
+function hydrateSavedGames() {
+    const savedGameIds = loadSavedGameIds();
+    const currentGames = new Map(gameList.value.map((game) => [game.id, game]));
+    const restoredGames = rehydrateSavedGames(savedGameIds, gameDB.value, randomString);
+    const restoredById = new Map(restoredGames.map((game) => [game.id, game]));
+
+    gameList.value = savedGameIds.flatMap((gameId) => {
+        const restoredGame = restoredById.get(gameId);
+        const currentGame = currentGames.get(gameId);
+
+        if (restoredGame && currentGame) {
+            return [mergeGameCatalogEntry(currentGame, restoredGame)];
+        }
+        if (restoredGame) {
+            return [restoredGame];
+        }
+        if (currentGame) {
+            return [currentGame];
+        }
+
+        return [];
+    });
+}
+
+watch(bundledReady, (isReady) => {
+    if (!isReady) {
+        return;
+    }
+
+    hydrateSavedGames();
+});
+
+watch(remoteRefreshed, (isRefreshed) => {
+    if (isRefreshed) {
+        hydrateSavedGames();
+    }
+});
+
 const selectedGame = computed(() => {
     if (!selectedGameId.value) return null;
     const found = gameList.value.find(g => g.uid === selectedGameId.value);
@@ -133,6 +174,7 @@ function addGameToList(game: Game) {
             uid: randomString(),
             ...game
         });
+        saveSavedGameIds(gameList.value.map((savedGame) => savedGame.id));
     }
 
     closeSearchResults();
@@ -143,6 +185,7 @@ const forceRerenderKey = ref(0);
 function removeGameFromList(game: Game) {
     const gameId = game.uid;
     gameList.value = gameList.value.filter(game => game.uid !== gameId);
+    saveSavedGameIds(gameList.value.map((savedGame) => savedGame.id));
     if (selectedGame.value?.uid === gameId) { 
         // selectedGame.value = null;
         selectedGameId.value = null;
