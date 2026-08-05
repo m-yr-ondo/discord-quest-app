@@ -1,6 +1,9 @@
 name: 'publish'
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -102,7 +105,6 @@ jobs:
           name: tauri-win-release
           path: |
             src-tauri/target/release/discord-quest-completer.exe
-            src-tauri/target/release/bundle/
             src-tauri/target/release/data/
             src-tauri/target/release/resources/
 
@@ -113,8 +115,15 @@ jobs:
       - name: get version
         id: extract_version
         run: |
-          version=$(date +"%Y.%m.%d")
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            tag_name="${GITHUB_REF_NAME}"
+          else
+            version=$(date +"%Y.%m.%d")
+            tag_name="v${version}"
+          fi
           echo "version=$version" >> $GITHUB_ENV
+          echo "tag_name=$tag_name" >> $GITHUB_ENV
         shell: bash
 
       - name: Download artifact
@@ -132,7 +141,8 @@ jobs:
           cp tauri-win-release/discord-quest-completer.exe ./build/${{ env.win_build_release_dir }}/
           cp -r tauri-win-release/data/ ./build/${{ env.win_build_release_dir }}/
           cp -r tauri-win-release/resources/ ./build/${{ env.win_build_release_dir }}/
-          zip -r ./build/${{ env.win_build_release_dir }}.zip ./build/${{ env.win_build_release_dir }}
+          cd ./build/${{ env.win_build_release_dir }}
+          zip -r ../${{ env.win_build_release_dir }}.zip .
           echo "win_build_release_dir=${{ env.win_build_release_dir }}" >> $GITHUB_ENV
 
       - name: Create Build Artifacts
@@ -141,18 +151,16 @@ jobs:
           win_build_release_dir: ${{ env.win_build_release_dir }}
         with:
           name: ${{ env.win_build_release_dir }}.zip
-          path: | 
-            ./build/${{ env.win_build_release_dir }}.zip
-            tauri-win-release/bundle/**/*
+          path: ./build/${{ env.win_build_release_dir }}.zip
 
       - name: Create and Upload Release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.version }}
-          name: Pre-Release ${{ env.version }}
+          tag_name: ${{ env.tag_name }}
+          name: Release ${{ env.version }}
           body: |
-            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/markterence/discord-quest-completer/${{ env.version }}/${{ env.win_build_release_dir }}.zip)
+            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/markterence/discord-quest-completer/${{ env.tag_name }}/${{ env.win_build_release_dir }}.zip)
 
             #### Disclaimer
             This tool is intended for educational purposes and personal use. Please respect Discord's terms of service and game publishers' rights when using this application.  
@@ -162,8 +170,8 @@ jobs:
           generate_release_notes: true
           files: |
             ./build/${{ env.win_build_release_dir }}.zip
-          prerelease: true
-          draft: true
+          prerelease: false
+          draft: false
         env:
           version: ${{ env.version }}
           win_build_release_dir: ${{ env.win_build_release_dir }}
