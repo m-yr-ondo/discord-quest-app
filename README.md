@@ -1,9 +1,13 @@
 <p>
-  <h1 align="center">Discord Quest Completer</h1>
+  <h1 align="center">
+    <a href="https://github.com/m-yr-ondo/discord-quest-app">
+      Discord Quest Completer
+    </a>
+  </h1>
 </p>
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/markterence/discord-quest-completer/build-release.yaml?branch=main&style=flat&label=build%20(release))
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/markterence/discord-quest-completer/rust-check.yml?branch=main&style=flat&label=scheduled%20build%20%28every%202%20days%29)](https://github.com/markterence/discord-quest-completer/actions/workflows/rust-check.yml?query=branch%3Amain+event%3Aschedule)
+[![Build release](https://img.shields.io/github/actions/workflow/status/m-yr-ondo/discord-quest-app/build-release.yaml?branch=main&style=flat&label=build%20(release))](https://github.com/m-yr-ondo/discord-quest-app/actions/workflows/build-release.yaml)
+[![Scheduled Rust checks](https://img.shields.io/github/actions/workflow/status/m-yr-ondo/discord-quest-app/rust-check.yml?branch=main&style=flat&label=scheduled%20build)](https://github.com/m-yr-ondo/discord-quest-app/actions/workflows/rust-check.yml?query=branch%3Amain+event%3Aschedule)
 
 
 > A quest completer for Discord. Discord Quest Completer. I don't know what to call this, but there it is.
@@ -11,14 +15,7 @@
 A Windows desktop application for Discord Rich Presence and completing Discord Quest for games without needing to install the full actual games/applications. Perfect for completing Discord Quests and showing off your gaming status without the storage burden.
 
 
-<!--
-Old attachments: Kept here since github dont provide way to remove/manage attached files.
-
-https://github.com/user-attachments/assets/34ff80c4-9e76-452c-9b02-e56f9ea706dd
-https://github.com/user-attachments/assets/de904123-07df-41a9-8db1-ff05cc7ccc9b
--->
-
-https://github.com/user-attachments/assets/de904123-07df-41a9-8db1-ff05cc7ccc9b
+![Discord Quest Completer](<docs/Screenshot 2026-08-06 190414.png>)
 
 ---
 
