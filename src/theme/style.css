@@ -1,1 +1,72 @@
 @import "tailwindcss";
+
+/*
+ * Theme tokens — Tailwind v4 CSS-first variables.
+ *
+ * Original theme: follows OS light/dark via @media (prefers-color-scheme).
+ * Neon theme: always dark, activated by [data-theme="neon"].
+ *
+ * Exposed as Tailwind utilities via @theme inline so they can be used as
+ * bg-app-bg, text-app-text, etc.
+ */
+
+/* ── Original light (default) ── */
+:root {
+  --app-bg: #f3f4f6;
+  --app-panel: #ffffff;
+  --app-panel-hover: #f3f4f6;
+  --app-text: #111827;
+  --app-text-muted: #6b7280;
+  --app-accent: #4f46e5;
+  --app-accent-hover: #4338ca;
+  --app-border: #e5e7eb;
+  --app-border-strong: #d1d5db;
+  --app-success: #16a34a;
+  --app-danger: #dc2626;
+}
+
+/* ── Original dark (OS prefers-color-scheme) ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="neon"]) {
+    --app-bg: #111827;
+    --app-panel: #1f2937;
+    --app-panel-hover: #374151;
+    --app-text: #ffffff;
+    --app-text-muted: #9ca3af;
+    --app-accent: #818cf8;
+    --app-accent-hover: #a5b4fc;
+    --app-border: #374151;
+    --app-border-strong: #4b5563;
+    --app-success: #22c55e;
+    --app-danger: #ef4444;
+  }
+}
+
+/* ── Neon (always dark) ── */
+[data-theme="neon"] {
+  --app-bg: #060618;
+  --app-panel: #0d0d2b;
+  --app-panel-hover: #1a1a3e;
+  --app-text: #e8e8ff;
+  --app-text-muted: #9898b8;
+  --app-accent: #a855f7;
+  --app-accent-hover: #c084fc;
+  --app-border: #242452;
+  --app-border-strong: #37376b;
+  --app-success: #4ade80;
+  --app-danger: #fb7185;
+}
+
+@theme inline {
+  --color-app-bg: var(--app-bg);
+  --color-app-panel: var(--app-panel);
+  --color-app-panel-hover: var(--app-panel-hover);
+  --color-app-text: var(--app-text);
+  --color-app-text-muted: var(--app-text-muted);
+  --color-app-accent: var(--app-accent);
+  --color-app-accent-hover: var(--app-accent-hover);
+  --color-app-border: var(--app-border);
+  --color-app-border-strong: var(--app-border-strong);
+  --color-app-success: var(--app-success);
+  --color-app-danger: var(--app-danger);
+}

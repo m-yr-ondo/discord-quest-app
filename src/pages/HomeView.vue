@@ -431,13 +431,13 @@ provide<GameActionsProvider>(GameActionsKey, {
     <div class="container mx-auto px-4 py-8">
         <!-- Center dialog -->
         <dialog id="dialog" class="dialogStyle inset-0 bg-gray-800 bg-opacity-50
-        border border-gray-300 dark:border-gray-600 rounded-lg
+        border border-app-border rounded-lg
         transition-opacity duration-300 ease-in-out z-50
         "
         style="left: 50%; top: 50%; transform: translate(-50%, -50%)"
         ref="dialogRef">
             <div class="flex flex-col items-center justify-center p-6" >
-                <div class="mb-4 text-gray-500 dark:text-gray-400">
+                <div class="mb-4 text-app-text-muted">
                     <div v-if="dialogKey === 'rpc_message_1'">
                         <p>
                         This is only a feature in development.  
@@ -461,8 +461,8 @@ provide<GameActionsProvider>(GameActionsKey, {
                     <button
                     
                     class="
-                text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 
-                border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-1"
+                text-app-text-muted hover:text-app-text 
+                border border-app-border rounded-lg px-4 py-1"
                 @click="hideDialog()">
                     <span  v-if="dialogKey == 'rpc_message_1'">
                         Cancel 
@@ -472,15 +472,15 @@ provide<GameActionsProvider>(GameActionsKey, {
                 
                 <button 
                 v-if="dialogKey === 'rpc_message_1'"
-                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 
-                border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-1"
+                class="text-app-text-muted hover:text-app-text 
+                border border-app-border rounded-lg px-4 py-1"
                 @click="continueRPCRisk(selectedGame)">
                     Accept risk and continue
                 </button>
                 </div>
             </div>
         </dialog>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+        <h1 class="text-3xl font-bold text-app-text mb-6 text-center">
             Handler
         </h1>
 
@@ -499,7 +499,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     enter-from-class="opacity-0 translate-y-2 ease-in-out"
                     enter-to-class="opacity-100 translate-y-0 ease-in-out"
                 >
-                    <div v-if="isLoadingGH" class="text-sm text-gray-500 dark:text-gray-400">
+                    <div v-if="isLoadingGH" class="text-sm text-app-text-muted">
                         Fetching game list from GitHub mirror... 
                       <div class="border-full h-2 w-2 bg-green-500 rounded-full inline-block ml-2 animate-pulse"></div>
                     </div>
@@ -507,7 +507,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                 <TimedNotification
                     :is-ready="isReadyGH" 
                     :duration="1500"
-                    container-class="text-sm text-gray-500 dark:text-gray-400"
+                    container-class="text-sm text-app-text-muted"
                 > 
                     Game list from mirror fetched <span class="text-green-400">✓</span>
                 </TimedNotification>
@@ -519,7 +519,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     enter-from-class="opacity-0 translate-y-2 ease-in-out"
                     enter-to-class="opacity-100 translate-y-0 ease-in-out"
                 >
-                    <div v-if="isLoadingDiscord" class="text-sm text-gray-500 dark:text-gray-400">
+                    <div v-if="isLoadingDiscord" class="text-sm text-app-text-muted">
                         Fetching game list directly from Discord...
                         <div class="border-full h-2 w-2 bg-green-500 rounded-full inline-block ml-2 animate-pulse"></div>
                     </div>
@@ -527,7 +527,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                 <TimedNotification
                     :is-ready="isReadyDiscord" 
                     :duration="1500"
-                    container-class="text-sm text-gray-500 dark:text-gray-400"
+                    container-class="text-sm text-app-text-muted"
                 > 
                     Game list from Discord fetched <span class="text-green-400">✓</span>
                 </TimedNotification>
@@ -540,7 +540,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     enter-from-class="opacity-0 translate-y-2 ease-in-out"
                     enter-to-class="opacity-100 translate-y-0 ease-in-out"
                 >
-                    <div v-if="isLoadingBundled" class="text-sm text-gray-500 dark:text-gray-400">
+                    <div v-if="isLoadingBundled" class="text-sm text-app-text-muted">
                         Fetching game list from bundled game list...
                         <div class="border-full h-2 w-2 bg-green-500 rounded-full inline-block ml-2 animate-pulse"></div>
                     </div>
@@ -548,7 +548,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                 <TimedNotification
                     :is-ready="isReadyBundled" 
                     :duration="1500"
-                    container-class="text-sm text-gray-500 dark:text-gray-400"
+                    container-class="text-sm text-app-text-muted"
                 > 
                     Game list from bundle pre-loaded <span class="text-green-400">✓</span>
                 </TimedNotification>
@@ -560,35 +560,35 @@ provide<GameActionsProvider>(GameActionsKey, {
         <div class="mb-8">
             <div class="relative" ref="searchResultContainerRef">
                <div>
-                 <input v-model="searchQuery" type="text" placeholder="Search Discord Verified games..."
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                    @focus="openSearchResults" @blur="handleSearchBlur" />
+<input v-model="searchQuery" type="text" placeholder="Search Discord Verified games..."
+                     class="w-full px-4 py-2 border border-app-border rounded-lg focus:ring-2 focus:ring-app-accent focus:border-app-accent bg-app-panel text-app-text"
+                     @focus="openSearchResults" @blur="handleSearchBlur" />
 
                 <!-- buttons to refetch game list -->
                 <button
                     @click="fetchGameList()"
-                    class="absolute right-0 top-1/2 transform -translate-y-1/2 px-3 mr-2 py-1 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-white rounded-md">
+                    class="absolute right-0 top-1/2 transform -translate-y-1/2 px-3 mr-2 py-1 text-sm bg-app-panel-hover hover:bg-app-border text-app-text rounded-md">
                     <span class="wrap whitespace-nowrap text-xs">
                         Refetch Game List
                     </span>
-                </button>   
+                </button>
                </div>
                 <div v-if="searchResultsIsOpen" @click="isOnSearchResults = true"
-                    class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    class="absolute z-50 mt-1 w-full bg-app-panel border border-app-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
                     <div v-if="searchResults.length > 0">
                         <div v-for="game in searchResults" :key="game.item.id"
-                            class="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                            class="p-3 hover:bg-app-panel-hover border-b border-app-border last:border-b-0">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <div class="font-medium text-gray-800 dark:text-white">
+                                    <div class="font-medium text-app-text">
                                         {{ game.item.name }}
                                     </div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">ID: {{ game.item.id }}</div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="text-sm text-app-text-muted">ID: {{ game.item.id }}</div>
+                                    <div class="text-xs text-app-text-muted">
                                         Executables:
                                         <ul class="list-disc list-inside">
                                             <li v-for="exe in game.item.executables" :key="exe.name"
-                                                class="text-gray-500 dark:text-gray-400">
+                                                class="text-app-text-muted">
                                                 <span class="font-mono">
                                                 {{ exe.name }}
                                                 ({{ exe.os }})</span>
@@ -597,7 +597,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                                     </div>
                                 </div>
                                 <button @click="addGameToList(game.item)"
-                                    class="ml-2 px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md">
+                                    class="ml-2 px-3 py-1 text-sm bg-app-accent hover:bg-app-accent-hover text-white rounded-md">
                                     Add game to list
                                 </button>
                             </div>
@@ -605,7 +605,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     </div>
                     <!-- Some help -->
                     <div v-if="searchResults.length === 0"
-                        class="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-b-0 text-gray-500 dark:text-gray-400">
+                        class="p-3 hover:bg-app-panel-hover border-b border-app-border last:border-b-0 text-app-text-muted">
                         Search for games by name. <br>
                         Click "Add game to list" to add them to your selected games.
                     </div>
@@ -617,35 +617,35 @@ provide<GameActionsProvider>(GameActionsKey, {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
             <!-- Left Column: Selected Games (scrollable) -->
             <!--  max-h-[70vh] overflow-y-auto : add these somewhere to just scroll the content  -->
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div class="bg-app-panel p-4 rounded-lg shadow">
                 <h2
-                    class="text-xl font-bold text-gray-900 dark:text-white mb-4 sticky top-0 bg-white dark:bg-gray-800 py-2 z-10">
+                    class="text-xl font-bold text-app-text mb-4 sticky top-0 bg-app-panel py-2 z-10">
                     Games</h2>
-                <div v-if="gameList.length === 0" class="text-gray-500 dark:text-gray-400 text-center py-8">
+                <div v-if="gameList.length === 0" class="text-app-text-muted text-center py-8">
                     No games selected. Search and add games from the search bar.
                 </div>
                 <div v-else class="space-y-4">
                     <div v-for="game in gameList" :key="game.id" 
-                        class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg
-                        hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors 
+                        class="p-3 border border-app-border rounded-lg
+                        hover:bg-app-panel-hover transition-colors 
                         duration-200 ease-in-out" 
                         :class="[
                             {
-                                'ring-1 ring-violet-500/40 shadow-[0px_0px_8px_2px_#8e51ff50] bg-gray-100 dark:bg-gray-700/40': selectedGame?.uid === game.uid,
+                                'ring-1 ring-app-accent/40 shadow-[0px_0px_8px_2px_#8e51ff50] bg-app-panel-hover': selectedGame?.uid === game.uid,
                             }
                         ]" @click="selectGame(game)"
                     >
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-1">
-                                <div class="font-medium text-gray-800 dark:text-white">{{ game.name }}</div>
+                                <div class="font-medium text-app-text">{{ game.name }}</div>
                                 <div class="relative inline-flex items-center">
                                     <div class="w-2 h-2 bg-white absolute rounded-full" style="left: 50%; top: 50%; transform: translate(-50%, -50%)"></div>
                                     <div class="relative inline-block">
-                                     <IconVerified class="w-5 h-5 text-indigo-500 dark:text-indigo-400"></IconVerified>
+                                     <IconVerified class="w-5 h-5 text-app-accent"></IconVerified>
                                     </div>
                                 </div>
                             </div>
-                            <button @click="removeGameFromList(game)" class="text-red-300 hover:text-red-400"
+                            <button @click="removeGameFromList(game)" class="text-app-danger hover:text-red-400"
                                 v-if="!game.is_running"> 
                                 Remove
                             </button>
@@ -661,20 +661,20 @@ provide<GameActionsProvider>(GameActionsKey, {
             </div>
 
             <!-- Right Column: Game Actions (fixed position) -->
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow md:sticky md:top-4 self-start" :key="forceRerenderKey">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Game Actions</h2>
+            <div class="bg-app-panel p-4 rounded-lg shadow md:sticky md:top-4 self-start" :key="forceRerenderKey">
+                <h2 class="text-xl font-bold text-app-text mb-4">Game Actions</h2>
                 <div class="space-y-4">
-                    <div class="text-gray-500 dark:text-gray-400 mb-2 text-sm" v-if="!selectedGame || selectedGame === null">
+                    <div class="text-app-text-muted mb-2 text-sm" v-if="!selectedGame || selectedGame === null">
                         Select a game from the left to perform actions.
                     </div>
                     
-                    <div v-if="selectedGame" class="text-gray-500 dark:text-gray-400 mb-4 text-sm">
+                    <div v-if="selectedGame" class="text-app-text-muted mb-4 text-sm">
                         <strong>Name:</strong> {{ selectedGame.name }}<br>
                         <strong>ID:</strong> {{ selectedGame.id }}<br>
                         <strong v-if="selectedGame.aliases && selectedGame.aliases.length > 0">Aliases:</strong>
                         <ul v-if="selectedGame.aliases && selectedGame.aliases.length > 0" class="list-disc list-inside" >
                             <li v-for="alias in selectedGame.aliases" :key="alias"
-                                class="text-gray-500 dark:text-gray-400">
+                                class="text-app-text-muted">
                                 <span class="font-mono">{{ alias }}</span>
                             </li>
                         </ul>
@@ -694,7 +694,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     </button> -->
 
                     <!-- divider -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+                    <div class="border-t border-app-border my-4"></div>
 
                     <GameExecutables v-if="selectedGame" :game="selectedGame" 
                         @play="playGame"
@@ -722,38 +722,38 @@ provide<GameActionsProvider>(GameActionsKey, {
                 </div>
 
                 <!-- Divider -->
-                <div class="border-t border-gray-200 dark:border-gray-700 my-5"></div>
+                <div class="border-t border-app-border my-5"></div>
 
-                <div class="mt-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <h3 class="font-medium text-gray-800 dark:text-white mb-2">Status</h3>
-                    <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                <div class="mt-6 p-4 border border-app-border rounded-lg">
+                    <h3 class="font-medium text-app-text mb-2">Status</h3>
+                    <div class="text-sm text-app-text-muted mb-2">
                         Check Discord to see if it displays that you are playing a game.
                     </div>
-                    <div v-if="currentlyPlaying" class="text-gray-500 dark:text-gray-400">
+                    <div v-if="currentlyPlaying" class="text-app-text-muted">
                         Currently playing: <span class="text-green-600"> {{gameList.find(g => g.id ===
                             currentlyPlaying)?.name }}</span>
                     </div>
-                    <div v-else class="text-gray-500 dark:text-gray-400">
+                    <div v-else class="text-app-text-muted">
                         Not playing any game
                     </div>
                 </div>
 
                 <div v-if="selectedGame" class="my-4">
-                    <h3 class="font-medium text-gray-800 dark:text-white mb-2">Game Info</h3>
+                    <h3 class="font-medium text-app-text mb-2">Game Info</h3>
                     <!-- Game info -->
-                    <!-- <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <!-- <div class="text-sm text-app-text-muted mb-2">
                     
                         <strong>Aliases:</strong>
                         <ul class="list-disc list-inside">
                             <li v-for="alias in selectedGame.aliases" :key="alias"
-                                class="text-gray-500 dark:text-gray-400">
+                                class="text-app-text-muted">
                                 <span class="font-mono">{{ alias }}</span>
                             </li>
                         </ul>
                         <strong>Executables:</strong>
                         <ul class="list-disc list-inside">
                             <li v-for="exe in getExecutables(selectedGame)" :key="exe"
-                                class="text-gray-500 dark:text-gray-400">
+                                class="text-app-text-muted">
                                 <span class="font-mono">{{ exe }}</span>
                             </li>
                         </ul>
