@@ -121,37 +121,11 @@ The dummy game executale files used by this program are placed in a folder calle
 - Set custom activity status from supported games
 - Linux and MacOS support (if possible) -->
 
-## :heart: Support :heart:
-
-
-[![GitHub][github-badge]][github-sponsors] - Become a Sponsor on GitHub. One time support, or a recurring donation
-
-[![Paypal][paypal-badge]][paypal] - One-time donation via PayPal
-
-<p align="center">
-  <img src="https://hoshizora.markterence.me/github-stargazers/markterence/discord-quest-completer?show_usernames=1&v=1" align="center" alt="stargazers"/>
-</p>
-
----
 
 ## 🖥️ Supported Platforms
 
-- Windows 11 (not tested on Windows 10 but it should work)
+- Windows 11 
 
-### 🐧 Linux and 🍎 MacOS Support?
-
-_TL;DR: Linux and macOS are not supported._
-
-Currently, only Windows is supported. I will try to add Linux support if I can. I don't have a macOS machine to test on, so macOS support is not going to happen.
-
-The reason for not having Linux and macOS support right now is that I want to make sure the dummy game runner has a minimal size — around 100KB or less for each platform.  
-For Windows, for example, I used Rust and the `windows` crate to access the Win32 API and create a dummy window. This compiles to a small 136KB executable.  
-I also tried a C# .NET app, which is fantastically small — only 7KB — but it may require the end-user to install the .NET 4.7 Runtime.
-
-For Linux, I don’t know where to start yet. I will try to explore more options to keep the runner binary small. It’s also a pain (Wine, Proton, etc. How does Discord detection even work on Linux? LMAO — same for macOS).  
-Additionally, if you are trying to run the windows build trough Wine in Linux, some of the dependencies such as Microsoft WebView2 somewhat problematic to install and get running.
-
----
 
 ## 🛠️ Tech Stack
 
@@ -159,17 +133,6 @@ Additionally, if you are trying to run the windows build trough Wine in Linux, s
 - 🌐 Vue.js
 - 🧰 Tauri
 
-## 🧑‍💻 Development Setup
-
-### 🖥️ Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
-
-### 📋 Requirements
-
-- Tauri - make sure the [pre-requisites](https://tauri.app/start/prerequisites/) are installed such as Rust.
-- NodeJS - use any that is latest or node 20+
-- pnpm - project uses pnpm as package manager for the frontend.
 
 ### 🛠️ Development
 
@@ -194,42 +157,11 @@ pnpm tauri dev
 - Also, get the list of detecatable games from the Discord API: `GET /api/applications/detectable` or `GET /api/:version/applications/detectable` and place the JSON file in `src/assets/gamelist.json`
 
 
----
-
-## Other Thoughts
-
-### The Discord's RPC server and Rich Presence 
-
-There is also an experimental action like Discord RPC functionality along the selected game.
-It connects to Discord's RPC Gateway to send Activity updates for the selected game using its App ID, even if the game is not actually running. (This is Rich Presence only so Quests will not detect it)
-
-(This may not work for some time, as Discord updates their RPC and SDK. The syntax I used in the Rust code may not be updated, as it is not one of the main focus of this app.)
-
-Though this is functional as it uses Discord Rich Presence, what happens is it uses the App ID of some App on Discord and connects it to the RPC.  
-See: [Discord Developer Docs – Creating an App](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app)
-
-For example, the App ID for Overwatch is `356875221078245376`, and we use it with something like [discordjs/rpc](https://github.com/discordjs/RPC).
 
 
-```js
-// Set this to your Client ID.
-const clientId = '356875221078245376'; // This is Overwatch's App ID on Discord, not one I created.
-DiscordRPC.register(clientId);
 
-const rpc = new DiscordRPC.Client({ transport: 'ipc' });
-const startTimestamp = new Date();
 
-// You will see "Verified Overwatch" on Discord Activity with custom details.
-rpc.setActivity({
-  details: `Bleet bleet`,
-  state: 'in bleet bleet party',
-  startTimestamp,
-});
-```
 
-This may not be the intended use of Discord's RPC and may violate their Terms of Service.  
-I am not entirely sure if you can use others' App IDs other than the ones you own in the Discord Developer Dashboard for the application you are developing.
-Use this feature at your own risk.
 
 
 ### Disclaimer
@@ -253,13 +185,9 @@ See the guide here: https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89
 
 ## License
 
-[MIT License](LICENSE)© Mark Terence Tiglao - 2025
+[MIT License](LICENSE)© 
 
 ---
 
 
-[github-badge]: https://img.shields.io/badge/-Github%20Sponsor-fafbfc?logo=GitHub%20Sponsors
-[github-sponsors]: https://github.com/sponsors/markterence
-[paypal-badge]: https://img.shields.io/badge/-Paypal-002991?logo=Paypal
-[paypal]: https://paypal.me/MarkTerenceTiglao
 
