@@ -39,9 +39,6 @@ function handleThemeChange(newTheme: Theme) {
           />
           <div class="flex-1">
             <div class="font-medium text-app-text">Original</div>
-            <div class="text-sm text-app-text-muted">
-              Follows your operating system's light or dark mode preference.
-            </div>
           </div>
         </label>
 
@@ -61,9 +58,25 @@ function handleThemeChange(newTheme: Theme) {
           />
           <div class="flex-1">
             <div class="font-medium text-app-text">Neon</div>
-            <div class="text-sm text-app-text-muted">
-              Dark navy and violet palette with layered panels and accent glow.
-            </div>
+          </div>
+        </label>
+
+        <label class="flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-colors"
+               :class="[
+                 theme === 'ember'
+                   ? 'border-app-accent bg-app-panel-hover'
+                   : 'border-app-border hover:border-app-border-strong'
+               ]">
+          <input
+            type="radio"
+            name="theme"
+            value="ember"
+            :checked="theme === 'ember'"
+            @change="handleThemeChange('ember')"
+            class="mt-1 h-4 w-4 accent-app-accent focus:ring-2 focus:ring-app-accent focus:ring-offset-2 focus:ring-offset-app-panel"
+          />
+          <div class="flex-1">
+            <div class="font-medium text-app-text">Ember</div>
           </div>
         </label>
       </fieldset>

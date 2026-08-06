@@ -27,7 +27,7 @@
 
 /* ── Original dark (OS prefers-color-scheme) ── */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="neon"]) {
+  :root:not([data-theme="neon"]):not([data-theme="ember"]) {
     --app-bg: #111827;
     --app-panel: #1f2937;
     --app-panel-hover: #374151;
@@ -55,6 +55,21 @@
   --app-border-strong: #37376b;
   --app-success: #4ade80;
   --app-danger: #fb7185;
+}
+
+/* ── Ember (always dark, flat charcoal and orange) ── */
+[data-theme="ember"] {
+  --app-bg: #0b0a09;
+  --app-panel: #171514;
+  --app-panel-hover: #24201e;
+  --app-text: #f5ede4;
+  --app-text-muted: #a89a8c;
+  --app-accent: #d97745;
+  --app-accent-hover: #eb8b55;
+  --app-border: #342c28;
+  --app-border-strong: #4a3b33;
+  --app-success: #4ade80;
+  --app-danger: #f87171;
 }
 
 @theme inline {

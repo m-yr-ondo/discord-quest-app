@@ -12,19 +12,19 @@ clear accent for active actions and selection.
 
 ### Palette
 
-| Role | Token | Original light | Original dark | Neon | Usage |
-|------|-------|----------------|---------------|------|-------|
-| Page background | `--app-bg` | `#f3f4f6` | `#111827` | `#060618` | App shell and page canvas |
-| Panel | `--app-panel` | `#ffffff` | `#1f2937` | `#0d0d2b` | Header, cards, controls |
-| Panel hover | `--app-panel-hover` | `#f3f4f6` | `#374151` | `#1a1a3e` | Hovered rows and controls |
-| Primary text | `--app-text` | `#111827` | `#ffffff` | `#e8e8ff` | Headings and readable content |
-| Muted text | `--app-text-muted` | `#6b7280` | `#9ca3af` | `#9898b8` | Supporting copy and metadata |
-| Accent | `--app-accent` | `#4f46e5` | `#818cf8` | `#a855f7` | Active navigation and primary actions |
-| Accent hover | `--app-accent-hover` | `#4338ca` | `#a5b4fc` | `#c084fc` | Hover and focus emphasis |
-| Border | `--app-border` | `#e5e7eb` | `#374151` | `#242452` | Standard separators |
-| Strong border | `--app-border-strong` | `#d1d5db` | `#4b5563` | `#37376b` | Inputs and selected surfaces |
-| Success | `--app-success` | `#16a34a` | `#22c55e` | `#4ade80` | Running and ready state |
-| Danger | `--app-danger` | `#dc2626` | `#ef4444` | `#fb7185` | Remove and stop actions |
+| Role | Token | Original light | Original dark | Neon | Ember | Usage |
+|------|-------|----------------|---------------|------|-------|-------|
+| Page background | `--app-bg` | `#f3f4f6` | `#111827` | `#060618` | `#0b0a09` | App shell and page canvas |
+| Panel | `--app-panel` | `#ffffff` | `#1f2937` | `#0d0d2b` | `#171514` | Header, cards, controls |
+| Panel hover | `--app-panel-hover` | `#f3f4f6` | `#374151` | `#1a1a3e` | `#24201e` | Hovered rows and controls |
+| Primary text | `--app-text` | `#111827` | `#ffffff` | `#e8e8ff` | `#f5ede4` | Headings and readable content |
+| Muted text | `--app-text-muted` | `#6b7280` | `#9ca3af` | `#9898b8` | `#a89a8c` | Supporting copy and metadata |
+| Accent | `--app-accent` | `#4f46e5` | `#818cf8` | `#a855f7` | `#d97745` | Active navigation and primary actions |
+| Accent hover | `--app-accent-hover` | `#4338ca` | `#a5b4fc` | `#c084fc` | `#eb8b55` | Hover and focus emphasis |
+| Border | `--app-border` | `#e5e7eb` | `#374151` | `#242452` | `#342c28` | Standard separators |
+| Strong border | `--app-border-strong` | `#d1d5db` | `#4b5563` | `#37376b` | `#4a3b33` | Inputs and selected surfaces |
+| Success | `--app-success` | `#16a34a` | `#22c55e` | `#4ade80` | `#4ade80` | Running and ready state |
+| Danger | `--app-danger` | `#dc2626` | `#ef4444` | `#fb7185` | `#f87171` | Remove and stop actions |
 
 Functional status colors remain distinct from structural theme colors. The
 existing Vue logo green and selected-game glow remain brand/state details.
@@ -33,6 +33,7 @@ existing Vue logo green and selected-game glow remain brand/state details.
 
 - Structural colors use the semantic tokens above.
 - Neon is always dark and does not depend on the operating-system color mode.
+- Ember is always dark, uses flat surfaces, and adds no glow, gradient, or new shadow treatment.
 - Accent is reserved for navigation, focus, selection, and primary actions.
 - Text and focus states must maintain WCAG AA contrast.
 
@@ -62,14 +63,14 @@ use `text-xl`, body copy uses `text-sm` or `text-base`, and metadata uses
 ### App Shell
 
 - **Structure**: header navigation, scrollable main slot, footer.
-- **Variants**: Original, Neon.
+- **Variants**: Original, Neon, Ember.
 - **States**: active navigation, hover, keyboard focus.
 - **Accessibility**: semantic header/nav/main/footer; keyboard-reachable links.
 
 ### Theme Option
 
 - **Structure**: labeled radio option with name and short description.
-- **Variants**: Original selected, Neon selected, unfocused, keyboard focus.
+- **Variants**: Original selected, Neon selected, Ember selected, unfocused, keyboard focus.
 - **States**: default, hover, checked, focus-visible.
 - **Accessibility**: native radio input remains in the DOM; labels are clickable.
 
