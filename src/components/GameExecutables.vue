@@ -1,5 +1,5 @@
 <template>
-    <div class="text-gray-500 dark:text-gray-400">
+    <div class="text-app-text-muted">
         <h3>
             The game has multiple platform executables. Please select one to launch:
         </h3>
@@ -8,7 +8,7 @@
             <div v-for="(executable) in filteredExecutables" :key="executable.name"
                 class="grid grid-cols-[auto_1fr_auto] gap-2 items-center mb-2 w-full">
                 <div class="w-14 max-w-[80px]">
-                    <div class="bg-gray-200 dark:bg-gray-700 rounded-full px-2 py-1 w-fit">
+                    <div class="bg-app-panel-hover rounded-full px-2 py-1 w-fit">
                         {{ executable.os }}
                     </div>
                 </div>
@@ -17,7 +17,7 @@
                 <div class="relative overflow-hidden ">
                     <div class="flex flex-nowrap overflow-x-auto scrollbar-none max-w-full pr-4 fade-right">
                         <div v-for="(section, i) in splitExecutableName(executable)" :key="i"
-                            class="text-center border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 mr-1 whitespace-nowrap">
+                            class="text-center border border-app-border rounded-md px-2 py-1 mr-1 whitespace-nowrap">
                             <span>{{ section }}</span>
                         </div>
                     </div>

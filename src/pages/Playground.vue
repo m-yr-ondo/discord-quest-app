@@ -7,10 +7,10 @@
         </button>
 
         <!-- Logs Section -->
-        <div class="mt-4 p-4 border rounded text-gray-700 dark:text-gray-300 dark:border-gray-600">
+        <div class="mt-4 p-4 border rounded text-app-text border-app-border">
             <div class="flex items-center justify-between mb-2">
                 <h2 class="text-lg font-semibold mb-2">Logs</h2>
-                <button class="mt-2 font-bold py-1 px-3 rounded dark:bg-gray-700 bg-gray-300 hover:bg-gray-400 text-sm"
+                <button class="mt-2 font-bold py-1 px-3 rounded bg-app-panel-hover hover:bg-app-border text-app-text text-sm"
                     @click="clearLogs">Clear Logs</button>
             </div>
 
@@ -19,10 +19,10 @@
                 <ul v-else class="list-none">
                     <li v-for="(log, index) in logs" :key="index" class="text-sm text-gray-400">{{ log }}</li>
                 </ul> -->
-                <div v-if="logs.length === 0" class="text-gray-400">No logs available.</div>
+                <div v-if="logs.length === 0" class="text-app-text-muted">No logs available.</div>
                 <ul v-else class="list-none">
                     <li v-for="(log, index) in logs" :key="index" class="text-sm">
-                        <span class="text-gray-500">[{{ new Date(log.timestamp).toLocaleString() }}]</span>
+                        <span class="text-app-text-muted">[{{ new Date(log.timestamp).toLocaleString() }}]</span>
                         <span :class="{
                             'text-blue-400': log.type === 'info',
                             'text-red-400': log.type === 'error',
