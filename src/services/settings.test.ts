@@ -32,6 +32,13 @@ describe('settings persistence', () => {
         expect(loadSettings(storage)).toEqual(settings);
     });
 
+    it('loads the Ember theme from storage', () => {
+        const storage = new MemoryStorage();
+        storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ version: 1, theme: 'ember' }));
+
+        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'ember' });
+    });
+
     it('returns Original when stored JSON is malformed', () => {
         const storage = new MemoryStorage();
         storage.setItem(SETTINGS_STORAGE_KEY, '{bad json');

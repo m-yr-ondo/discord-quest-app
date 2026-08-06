@@ -1,6 +1,6 @@
 export const SETTINGS_STORAGE_KEY = 'discord-quest-completer:settings';
 
-export type Theme = 'original' | 'neon';
+export type Theme = 'original' | 'neon' | 'ember';
 
 export type SavedSettings = {
     readonly version: 1;
@@ -23,7 +23,7 @@ function getBrowserStorage(): SettingsStorage {
 }
 
 function isTheme(value: unknown): value is Theme {
-    return value === 'original' || value === 'neon';
+    return value === 'original' || value === 'neon' || value === 'ember';
 }
 
 function isSavedSettings(value: unknown): value is SavedSettings {
