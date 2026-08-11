@@ -200,7 +200,7 @@ fn connect_to_discord_rpc_3(handle: AppHandle, activity_json: String, action: St
 
 #[tauri::command(rename_all = "snake_case")]
 async fn fetch_gamelist_gh_mirror() -> tauri::ipc::Response {
-    let res = tauri_plugin_http::reqwest::get("https://markterence.github.io/discord-quest-completer/detectable.json").await;
+    let res = tauri_plugin_http::reqwest::get("https://m-yr-ondo.github.io/discord-quest-app/detectable.json").await;
     tauri::ipc::Response::new(res.unwrap().text().await.unwrap())
 }
 
