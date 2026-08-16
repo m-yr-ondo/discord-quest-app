@@ -157,8 +157,11 @@ jobs:
         run: |
           mkdir -p ./build/${{ env.win_build_release_dir }}
           cp tauri-win-release/discord-quest-completer.exe ./build/${{ env.win_build_release_dir }}/
-          cp -r tauri-win-release/data/ ./build/${{ env.win_build_release_dir }}/
-          cp -r tauri-win-release/resources/ ./build/${{ env.win_build_release_dir }}/
+          for directory in data resources; do
+            if [[ -d "tauri-win-release/${directory}" ]]; then
+              cp -r "tauri-win-release/${directory}" "./build/${{ env.win_build_release_dir }}/"
+            fi
+          done
           cd ./build/${{ env.win_build_release_dir }}
           zip -r ../${{ env.win_build_release_dir }}.zip .
           echo "win_build_release_dir=${{ env.win_build_release_dir }}" >> $GITHUB_ENV
@@ -207,7 +210,7 @@ jobs:
           tag_name: ${{ env.tag_name }}
           name: Release ${{ env.version }}
           body: |
-            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/markterence/discord-quest-completer/${{ env.tag_name }}/${{ env.win_build_release_dir }}.zip)
+            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/m-yr-ondo/discord-quest-app/${{ env.tag_name }}/${{ env.win_build_release_dir }}.zip)
 
             #### Disclaimer
             This tool is intended for educational purposes and personal use. Please respect Discord's terms of service and game publishers' rights when using this application.  
