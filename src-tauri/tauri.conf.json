@@ -32,7 +32,8 @@
   }, 
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -42,6 +43,17 @@
     ],
     "resources": {
       "resources/src-win.exe": "data/src-win.exe"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIyOTFDRDMyODA1NjM1QUIKUldTck5WYUFNczJSSXBSeVJ0SGRZTk82bUMzbm10b2V3MnQxL0t6K041c1laWk50OVVMSmhLY08K",
+      "endpoints": [
+        "https://github.com/m-yr-ondo/discord-quest-app/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }
