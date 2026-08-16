@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import { message } from '@tauri-apps/plugin-dialog'; 
 import { invoke } from '@tauri-apps/api/core';
 import { useGlobalState } from './app-state';
+import { normalizeGameCatalogEntry } from '@/services/game-executables';
 
 export function useFetchGameList() {
     const { addLog } = useGlobalState();
@@ -89,7 +90,7 @@ export function useFetchGameList() {
         }
 
         if (gameListGHMirror.value && gameListGHMirror.value.length > 0 && isValidGameList(gameListGHMirror.value)) {
-            gameDB.value = gameListGHMirror.value as Game[];
+            gameDB.value = (gameListGHMirror.value as Game[]).map(normalizeGameCatalogEntry);
             remoteRefreshed.value = true;
             addLog('Using refreshed game list from GitHub mirror. ' + gameListGHMirror.value.length + ' entries.');
             return;
@@ -103,7 +104,7 @@ export function useFetchGameList() {
         }
 
         if (gameListFromDiscord.value && gameListFromDiscord.value.length > 0 && isValidGameList(gameListFromDiscord.value)) {
-            gameDB.value = gameListFromDiscord.value as Game[];
+            gameDB.value = (gameListFromDiscord.value as Game[]).map(normalizeGameCatalogEntry);
             remoteRefreshed.value = true;
             addLog('Using refreshed game list from Discord. ' + gameListFromDiscord.value.length + ' entries.');
             return;
@@ -127,7 +128,7 @@ export function useFetchGameList() {
         }
 
         if (bundledGameList.value.length > 0 && isValidGameList(bundledGameList.value)) {
-            gameDB.value = bundledGameList.value as Game[];
+            gameDB.value = (bundledGameList.value as Game[]).map(normalizeGameCatalogEntry);
             addLog('Using bundled game list. ' + bundledGameList.value.length + ' entries.');
         }
 

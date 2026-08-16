@@ -2,8 +2,8 @@ name: 'publish'
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -15,6 +15,8 @@ env:
 
 jobs:
   build-tauri:
+    outputs:
+      version: ${{ steps.automatic_version.outputs.version }}
     permissions:
       contents: write
     strategy:
@@ -28,6 +30,14 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate automatic version
+        id: automatic_version
+        shell: bash
+        run: |
+          version="$(date -u +'%Y.%-m').${GITHUB_RUN_NUMBER}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          node scripts/set-version.mjs "$version"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -92,9 +102,21 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install
 
+      - name: Verify updater signing key is configured
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [[ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]]; then
+            echo "TAURI_SIGNING_PRIVATE_KEY is not configured in repository secrets."
+            exit 1
+          fi
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: ${{ matrix.args }}
       
@@ -107,6 +129,7 @@ jobs:
             src-tauri/target/release/discord-quest-completer.exe
             src-tauri/target/release/data/
             src-tauri/target/release/resources/
+            src-tauri/target/release/bundle/
 
   release:
     needs: build-tauri
@@ -115,13 +138,8 @@ jobs:
       - name: get version
         id: extract_version
         run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            version="${GITHUB_REF_NAME#v}"
-            tag_name="${GITHUB_REF_NAME}"
-          else
-            version=$(date +"%Y.%m.%d")
-            tag_name="v${version}"
-          fi
+          version="${{ needs.build-tauri.outputs.version }}"
+          tag_name="v${version}"
           echo "version=$version" >> $GITHUB_ENV
           echo "tag_name=$tag_name" >> $GITHUB_ENV
         shell: bash
@@ -144,6 +162,35 @@ jobs:
           cd ./build/${{ env.win_build_release_dir }}
           zip -r ../${{ env.win_build_release_dir }}.zip .
           echo "win_build_release_dir=${{ env.win_build_release_dir }}" >> $GITHUB_ENV
+
+      - name: Prepare signed updater metadata
+        shell: bash
+        run: |
+          updater_zip="$(find tauri-win-release -type f -name '*.nsis.zip' -print -quit)"
+          updater_signature="${updater_zip}.sig"
+          installer="$(find tauri-win-release -type f -name '*-setup.exe' -print -quit)"
+
+          if [[ -z "${updater_zip}" || ! -f "${updater_signature}" || -z "${installer}" ]]; then
+            echo "Signed NSIS updater artifacts were not found."
+            find tauri-win-release -type f -print
+            exit 1
+          fi
+
+          updater_asset="./build/discord-quest-completer-windows-x86_64.nsis.zip"
+          installer_asset="./build/discord-quest-completer-windows-x86_64-setup.exe"
+          signature_asset="${updater_asset}.sig"
+          cp "${updater_zip}" "${updater_asset}"
+          cp "${updater_signature}" "${signature_asset}"
+          cp "${installer}" "${installer_asset}"
+
+          signature="$(tr -d '\r\n' < "${signature_asset}")"
+          jq -n \
+            --arg version "${{ env.version }}" \
+            --arg pub_date "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --arg url "https://github.com/m-yr-ondo/discord-quest-app/releases/download/${{ env.tag_name }}/discord-quest-completer-windows-x86_64.nsis.zip" \
+            --arg signature "${signature}" \
+            '{version: $version, notes: "Automatic update", pub_date: $pub_date, platforms: {"windows-x86_64": {url: $url, signature: $signature}}}' \
+            > ./build/latest.json
 
       - name: Create Build Artifacts
         uses: actions/upload-artifact@v4
@@ -170,6 +217,10 @@ jobs:
           generate_release_notes: true
           files: |
             ./build/${{ env.win_build_release_dir }}.zip
+            ./build/discord-quest-completer-windows-x86_64.nsis.zip
+            ./build/discord-quest-completer-windows-x86_64.nsis.zip.sig
+            ./build/discord-quest-completer-windows-x86_64-setup.exe
+            ./build/latest.json
           prerelease: false
           draft: false
         env:

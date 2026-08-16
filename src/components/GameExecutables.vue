@@ -1,7 +1,7 @@
 <template>
     <div class="text-app-text-muted">
         <h3>
-            The game has multiple platform executables. Please select one to launch:
+            Select an executable to launch:
         </h3>
 
         <div class="text-xs mt-2">
