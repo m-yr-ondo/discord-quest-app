@@ -39,6 +39,13 @@ describe('settings persistence', () => {
         expect(loadSettings(storage)).toEqual({ version: 1, theme: 'ember' });
     });
 
+    it('loads the Obsidian theme from storage', () => {
+        const storage = new MemoryStorage();
+        storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ version: 1, theme: 'obsidian' }));
+
+        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'obsidian' });
+    });
+
     it('returns Original when stored JSON is malformed', () => {
         const storage = new MemoryStorage();
         storage.setItem(SETTINGS_STORAGE_KEY, '{bad json');

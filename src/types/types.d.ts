@@ -14,6 +14,10 @@ export interface Game {
     id: string;
     name: string;
     executables: GameExecutable[];
+    icon_hash?: string | null;
+    cover_image_hash?: string | null;
+    icon_url?: string;
+    cover_image_url?: string;
     aliases?: string[];
     themes?: string[];
     is_running?: boolean;

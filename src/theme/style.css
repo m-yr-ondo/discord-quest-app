@@ -27,7 +27,7 @@
 
 /* ── Original dark (OS prefers-color-scheme) ── */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="neon"]):not([data-theme="ember"]) {
+  :root:not([data-theme="neon"]):not([data-theme="ember"]):not([data-theme="obsidian"]) {
     --app-bg: #111827;
     --app-panel: #1f2937;
     --app-panel-hover: #374151;
@@ -70,6 +70,21 @@
   --app-border-strong: #4a3b33;
   --app-success: #4ade80;
   --app-danger: #f87171;
+}
+
+/* ── Obsidian (black glass panels with purple arcade accents) ── */
+[data-theme="obsidian"] {
+  --app-bg: #050509;
+  --app-panel: #0b0b13;
+  --app-panel-hover: #151221;
+  --app-text: #f7f5ff;
+  --app-text-muted: #aaa5ba;
+  --app-accent: #8b5cf6;
+  --app-accent-hover: #a78bfa;
+  --app-border: #252033;
+  --app-border-strong: #443568;
+  --app-success: #4ade80;
+  --app-danger: #fb7185;
 }
 
 @theme inline {
