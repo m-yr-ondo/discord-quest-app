@@ -169,28 +169,25 @@ jobs:
       - name: Prepare signed updater metadata
         shell: bash
         run: |
-          updater_zip="$(find tauri-win-release -type f -name '*.nsis.zip' -print -quit)"
-          updater_signature="${updater_zip}.sig"
-          installer="$(find tauri-win-release -type f -name '*-setup.exe' -print -quit)"
+          updater_installer="$(find tauri-win-release -type f -name '*-setup.exe' -print -quit)"
+          updater_signature="${updater_installer}.sig"
 
-          if [[ -z "${updater_zip}" || ! -f "${updater_signature}" || -z "${installer}" ]]; then
+          if [[ -z "${updater_installer}" || ! -f "${updater_signature}" ]]; then
             echo "Signed NSIS updater artifacts were not found."
             find tauri-win-release -type f -print
             exit 1
           fi
 
-          updater_asset="./build/discord-quest-completer-windows-x86_64.nsis.zip"
-          installer_asset="./build/discord-quest-completer-windows-x86_64-setup.exe"
+          updater_asset="./build/discord-quest-completer-windows-x86_64-setup.exe"
           signature_asset="${updater_asset}.sig"
-          cp "${updater_zip}" "${updater_asset}"
+          cp "${updater_installer}" "${updater_asset}"
           cp "${updater_signature}" "${signature_asset}"
-          cp "${installer}" "${installer_asset}"
 
           signature="$(tr -d '\r\n' < "${signature_asset}")"
           jq -n \
             --arg version "${{ env.version }}" \
             --arg pub_date "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-            --arg url "https://github.com/m-yr-ondo/discord-quest-app/releases/download/${{ env.tag_name }}/discord-quest-completer-windows-x86_64.nsis.zip" \
+            --arg url "https://github.com/m-yr-ondo/discord-quest-app/releases/download/${{ env.tag_name }}/discord-quest-completer-windows-x86_64-setup.exe" \
             --arg signature "${signature}" \
             '{version: $version, notes: "Automatic update", pub_date: $pub_date, platforms: {"windows-x86_64": {url: $url, signature: $signature}}}' \
             > ./build/latest.json
@@ -220,9 +217,8 @@ jobs:
           generate_release_notes: true
           files: |
             ./build/${{ env.win_build_release_dir }}.zip
-            ./build/discord-quest-completer-windows-x86_64.nsis.zip
-            ./build/discord-quest-completer-windows-x86_64.nsis.zip.sig
             ./build/discord-quest-completer-windows-x86_64-setup.exe
+            ./build/discord-quest-completer-windows-x86_64-setup.exe.sig
             ./build/latest.json
           prerelease: false
           draft: false
