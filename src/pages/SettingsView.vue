@@ -96,7 +96,6 @@ function handleThemeChange(newTheme: Theme) {
           />
           <div class="flex-1">
             <div class="font-medium text-app-text">Obsidian</div>
-            <div class="text-sm text-app-text-muted">Black glass panels with purple arcade accents</div>
           </div>
         </label>
       </fieldset>
