@@ -79,6 +79,26 @@ function handleThemeChange(newTheme: Theme) {
             <div class="font-medium text-app-text">Ember</div>
           </div>
         </label>
+
+        <label class="flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-colors"
+               :class="[
+                 theme === 'obsidian'
+                   ? 'border-app-accent bg-app-panel-hover'
+                   : 'border-app-border hover:border-app-border-strong'
+               ]">
+          <input
+            type="radio"
+            name="theme"
+            value="obsidian"
+            :checked="theme === 'obsidian'"
+            @change="handleThemeChange('obsidian')"
+            class="mt-1 h-4 w-4 accent-app-accent focus:ring-2 focus:ring-app-accent focus:ring-offset-2 focus:ring-offset-app-panel"
+          />
+          <div class="flex-1">
+            <div class="font-medium text-app-text">Obsidian</div>
+            <div class="text-sm text-app-text-muted">Black glass panels with purple arcade accents</div>
+          </div>
+        </label>
       </fieldset>
     </div>
   </div>

@@ -9,6 +9,7 @@ import { GameActionsProvider, GameExecutable, type Game } from '@/types/types';
 import IconVerified from '@/components/IconVerified.vue';
 import { isEmpty } from 'lodash-es';
 import GameExecutables from '@/components/GameExecutables.vue';
+import GameArtwork from '@/components/GameArtwork.vue';
 import { GameActionsKey } from '@/constants/constants';
 import { path } from '@tauri-apps/api';
 import { emit } from '@tauri-apps/api/event';
@@ -17,7 +18,7 @@ import { UseFuseOptions } from '@vueuse/integrations';
 import Fuse from 'fuse.js';
 import { useGlobalState } from '@/composables/app-state';
 import TimedNotification from '@/components/TimedNotification.vue';
-import { loadSavedGameIds, mergeGameCatalogEntry, rehydrateSavedGames, saveSavedGameIds } from '@/services/saved-games';
+import { loadSavedGames, mergeGameCatalogEntry, rehydrateSavedGames, saveSavedGames } from '@/services/saved-games';
 
 
 type DialogKey = 
@@ -116,9 +117,10 @@ const gameList = ref<Game[]>([]);
 const selectedGameId = ref<string | null | undefined>(null);
 
 function hydrateSavedGames() {
-    const savedGameIds = loadSavedGameIds();
+    const savedGames = loadSavedGames();
+    const savedGameIds = savedGames.map((game) => game.id);
     const currentGames = new Map(gameList.value.map((game) => [game.id, game]));
-    const restoredGames = rehydrateSavedGames(savedGameIds, gameDB.value, randomString);
+    const restoredGames = rehydrateSavedGames(savedGames, gameDB.value, randomString);
     const restoredById = new Map(restoredGames.map((game) => [game.id, game]));
 
     gameList.value = savedGameIds.flatMap((gameId) => {
@@ -174,7 +176,7 @@ function addGameToList(game: Game) {
             uid: randomString(),
             ...game
         });
-        saveSavedGameIds(gameList.value.map((savedGame) => savedGame.id));
+        saveSavedGames(gameList.value);
     }
 
     closeSearchResults();
@@ -185,7 +187,7 @@ const forceRerenderKey = ref(0);
 function removeGameFromList(game: Game) {
     const gameId = game.uid;
     gameList.value = gameList.value.filter(game => game.uid !== gameId);
-    saveSavedGameIds(gameList.value.map((savedGame) => savedGame.id));
+    saveSavedGames(gameList.value);
     if (selectedGame.value?.uid === gameId) { 
         // selectedGame.value = null;
         selectedGameId.value = null;
@@ -578,8 +580,10 @@ provide<GameActionsProvider>(GameActionsKey, {
                     <div v-if="searchResults.length > 0">
                         <div v-for="game in searchResults" :key="game.item.id"
                             class="p-3 hover:bg-app-panel-hover border-b border-app-border last:border-b-0">
-                            <div class="flex justify-between items-center">
-                                <div>
+                            <div class="flex justify-between items-center gap-3">
+                                <div class="flex items-start gap-3 min-w-0">
+                                    <GameArtwork :game="game.item" class="w-10 h-10" />
+                                    <div class="min-w-0">
                                     <div class="font-medium text-app-text">
                                         {{ game.item.name }}
                                     </div>
@@ -594,6 +598,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                                                 ({{ exe.os }})</span>
                                             </li>
                                         </ul>
+                                    </div>
                                     </div>
                                 </div>
                                 <button @click="addGameToList(game.item)"
@@ -636,13 +641,16 @@ provide<GameActionsProvider>(GameActionsKey, {
                         ]" @click="selectGame(game)"
                     >
                         <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-1">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <GameArtwork :game="game" class="w-10 h-10" />
+                                <div class="flex items-center gap-1 min-w-0">
                                 <div class="font-medium text-app-text">{{ game.name }}</div>
                                 <div class="relative inline-flex items-center">
                                     <div class="w-2 h-2 bg-white absolute rounded-full" style="left: 50%; top: 50%; transform: translate(-50%, -50%)"></div>
                                     <div class="relative inline-block">
                                      <IconVerified class="w-5 h-5 text-app-accent"></IconVerified>
                                     </div>
+                                </div>
                                 </div>
                             </div>
                             <button @click="removeGameFromList(game)" class="text-app-danger hover:text-red-400"
@@ -669,6 +677,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     </div>
                     
                     <div v-if="selectedGame" class="text-app-text-muted mb-4 text-sm">
+                        <GameArtwork :game="selectedGame" variant="cover" class="w-full h-28 mb-4" />
                         <strong>Name:</strong> {{ selectedGame.name }}<br>
                         <strong>ID:</strong> {{ selectedGame.id }}<br>
                         <strong v-if="selectedGame.aliases && selectedGame.aliases.length > 0">Aliases:</strong>

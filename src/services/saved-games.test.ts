@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Game } from '@/types/types';
 import {
+    loadSavedGames,
     loadSavedGameIds,
     mergeGameCatalogEntry,
     rehydrateSavedGames,
+    saveSavedGames,
     saveSavedGameIds,
 } from './saved-games';
 
@@ -49,6 +51,23 @@ describe('saved games persistence', () => {
         expect(loadSavedGameIds(storage)).toEqual(['one', 'two']);
     });
 
+    it('persists artwork references with saved games', () => {
+        const storage = new MemoryStorage();
+
+        saveSavedGames([{
+            id: 'one',
+            icon_url: 'https://cdn.discordapp.com/icon.png',
+            cover_image_url: 'https://cdn.discordapp.com/cover.png',
+        }], storage);
+
+        expect(loadSavedGames(storage)).toEqual([{
+            id: 'one',
+            icon_url: 'https://cdn.discordapp.com/icon.png',
+            cover_image_url: 'https://cdn.discordapp.com/cover.png',
+        }]);
+        expect(loadSavedGameIds(storage)).toEqual(['one']);
+    });
+
     it('rejects malformed saved data', () => {
         const storage = new MemoryStorage();
         storage.setItem('discord-quest-completer:saved-game-ids', '{bad json');
@@ -72,6 +91,19 @@ describe('saved games persistence', () => {
         expect(restored.map((game) => game.uid)).toEqual(['uid-1', 'uid-2']);
         expect(restored.every((game) => !game.is_running)).toBe(true);
         expect(restored.every((game) => game.executables.every((executable) => !executable.is_running))).toBe(true);
+    });
+
+    it('restores saved artwork when the refreshed catalog has no artwork URL', () => {
+        const catalog = [makeGame('one', 'One')];
+
+        const restored = rehydrateSavedGames([
+            {
+                id: 'one',
+                icon_url: 'https://cdn.discordapp.com/icon.png',
+            },
+        ], catalog, () => 'uid-1');
+
+        expect(restored[0]?.icon_url).toBe('https://cdn.discordapp.com/icon.png');
     });
 
     it('preserves runtime state when the catalog is refreshed', () => {
