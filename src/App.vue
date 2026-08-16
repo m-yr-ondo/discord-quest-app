@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, shallowRef } from 'vue';
 import { check, type Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import MainLayout from './components/MainLayout.vue';
@@ -11,7 +11,9 @@ import UpdatePrompt from './components/UpdatePrompt.vue';
 
 const appState = useGlobalState();
 const { page } = appState;
-const availableUpdate = ref<Update | null>(null);
+// Tauri's Update object contains private class fields. A deep Vue ref would
+// proxy those fields and make downloadAndInstall fail at runtime.
+const availableUpdate = shallowRef<Update | null>(null);
 const checkingForUpdate = ref(false);
 const installingUpdate = ref(false);
 const updateProgress = ref<number | null>(null);
