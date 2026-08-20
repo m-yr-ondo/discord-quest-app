@@ -1,8 +1,6 @@
 pub use discord_sdk as ds;
 pub use tokio;
 
-/// Application identifier for "Andy's Test App" used in the Discord SDK's
-/// examples.
 pub struct Client {
     pub discord: ds::Discord,
     pub wheel: ds::wheel::Wheel,

@@ -13,7 +13,6 @@
                     </div>
                 </div>
 
-                <!-- Sections / Breadcrumbs must fade when too long -->
                 <div class="relative overflow-hidden ">
                     <div class="flex flex-nowrap overflow-x-auto scrollbar-none max-w-full pr-4 fade-right">
                         <div v-for="(section, i) in splitExecutableName(executable)" :key="i"
@@ -61,7 +60,6 @@ const gameActions = inject<GameActionsProvider>(GameActionsKey);
 
 const filteredExecutables = computed(() => {
     return props.game.executables.filter(executable => {
-        // currently no support for linux and darwin
         return executable.os !== EXECUTABLE_OS.LINUX && executable.os !== EXECUTABLE_OS.DARWIN
             && !isValidPath(executable.name);
     });
@@ -71,7 +69,6 @@ function splitExecutableName(executable: GameExecutable) {
     const allSections = executable.name.split(/\\|\//);
     
     const last = executable.name.split(/\\|\//).pop();
-    // remove file extension if there was none, just return the last section
     const name = last?.split('.').slice(0, -1).join('.') || last;
     return [
         ...allSections.slice(0, -1),
@@ -82,7 +79,6 @@ function splitExecutableName(executable: GameExecutable) {
 function getExecutablePath(executable: GameExecutable) {
     const allSections = executable.name.split(/\\|\//);
     const last = executable.name.split(/\\|\//).pop();
-    // remove file extension if there was none, just return the last section
     const name = last?.split('.').slice(0, -1).join('.') || last;
     return [
         ...allSections.slice(0, -1)
@@ -91,7 +87,6 @@ function getExecutablePath(executable: GameExecutable) {
 
 function getFilename(executable: GameExecutable) {
     const last = executable.name.split(/\\|\//).pop();
-    // remove file extension if there was none, just return the last section
     return last;
 }
 
@@ -101,7 +96,6 @@ function isValidPath(path: string) {
 }
 
 function handleLaunch(executable: GameExecutable) {
-    // Handle the launch logic here
     console.log('Launching game:', props.game);
     if(executable.is_running) {
         emit('stop', {

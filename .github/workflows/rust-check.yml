@@ -7,7 +7,6 @@ on:
       - '**/*.rs'
       - '**/Cargo.toml'
   schedule:
-    - cron: "0 0 */2 * *"   # every 2 days at midnight
   workflow_dispatch:
   
 env:
@@ -72,7 +71,6 @@ jobs:
             exit 1
           fi
       
-      # Build src-win
       - name: Build src-win project x86_64 binary
         if: matrix.platform == 'windows-latest'
         shell: bash

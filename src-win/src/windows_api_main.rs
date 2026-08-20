@@ -37,7 +37,7 @@ fn parse_args() -> Config {
     let args: Vec<String> = env::args().collect();
     let mut config = Config::default();
     
-    let mut i = 1; // Skip program name
+    let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
             "--title" => {
@@ -62,7 +62,6 @@ fn parse_args() -> Config {
     config
 }
 
-// Window procedure for handling messages
 unsafe extern "system" fn window_proc(
     hwnd: HWND,
     msg: u32,
@@ -115,12 +114,12 @@ fn create_window(title: &str) -> Option<HWND> {
             PCSTR(class_name.as_ptr() as *const u8),
             PCSTR(window_title.as_ptr() as *const u8),
             WS_OVERLAPPEDWINDOW,
-            100, 100, // x, y position
-            WIDTH as i32, HEIGHT as i32, // width, height
-            None, // Parent window
-            None, // Menu
-            Some(HINSTANCE(hinstance.0)), // Instance handle
-            None, // Additional application data
+            100, 100,
+            WIDTH as i32, HEIGHT as i32,
+            None,
+            None,
+            Some(HINSTANCE(hinstance.0)),
+            None,
         );
         
         match hwnd {
@@ -136,18 +135,18 @@ fn create_label(parent_hwnd: HWND, text: &str) -> Option<HWND> {
         let window_text = CString::new(text).ok()?;
         
         let label_hwnd = CreateWindowExA(
-            WINDOW_EX_STYLE(0), // Extended window style
-            PCSTR(class_name.as_ptr() as *const u8), // Class name
-            PCSTR(window_text.as_ptr() as *const u8), // Window text
-            WS_CHILD | WS_VISIBLE, // Window style
-            10,  // x position
-            10,  // y position  
-            180, // width
-            30,  // height
-            Some(parent_hwnd), // Parent window
-            None, // Menu
-            None, // Instance handle
-            None, // Additional application data
+            WINDOW_EX_STYLE(0),
+            PCSTR(class_name.as_ptr() as *const u8),
+            PCSTR(window_text.as_ptr() as *const u8),
+            WS_CHILD | WS_VISIBLE,
+            10,
+            10,
+            180,
+            30,
+            Some(parent_hwnd),
+            None,
+            None,
+            None,
         );
         
         match label_hwnd {
@@ -160,33 +159,27 @@ fn create_label(parent_hwnd: HWND, text: &str) -> Option<HWND> {
 fn main() {
     let config = parse_args();
     
-    // Create the tray icon first
     let _tray = create_tray_icon();
     
-    // Create a native Windows window
     let hwnd = create_window(&config.title).expect("Unable to create the window");
     
-    // Create a Windows label to display the title
     let _label_hwnd = create_label(hwnd, &config.title);
     
     unsafe { 
         if config.start_minimized {
-            // Only modify window styles when starting minimized
             let ex_style = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
             let new_ex_style = (ex_style & !WS_EX_APPWINDOW.0 as isize) |
-                WS_EX_TOOLWINDOW.0 as isize | // Make the window a tool window (so it doesn't show in the taskbar)
-                WS_EX_TRANSPARENT.0 as isize | // Make the window transparent
-                WS_EX_LAYERED.0 as isize; // WS_EX_LAYERED make the window layered (for transparency)
+                WS_EX_TOOLWINDOW.0 as isize |
+                WS_EX_TRANSPARENT.0 as isize |
+                WS_EX_LAYERED.0 as isize;
             
             SetWindowLongPtrA(hwnd, GWL_EXSTYLE, new_ex_style);
             let _ = ShowWindow(hwnd, SW_HIDE);
         } else {
-            // For normal window, just show it without modifying styles
             let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
         }
     }
 
-    // Message loop
     unsafe {
         let mut msg = MSG::default();
         loop {

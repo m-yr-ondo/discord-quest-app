@@ -23,7 +23,7 @@ impl TextRenderer {
                 for px in 0..size * 5 {
                     let buffer_pos = (y + py) * self.width + (char_x + px);
                     if buffer_pos < buffer.len() {
-                        buffer[buffer_pos] = 0xFFFFFFFF; // White
+                        buffer[buffer_pos] = 0xFFFFFFFF;
                     }
                 }
             }

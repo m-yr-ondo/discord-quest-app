@@ -16,7 +16,7 @@ import { ref, watch, onUnmounted } from 'vue';
 
 interface Props {
   isReady: boolean;
-  duration?: number; // Duration in milliseconds
+  duration?: number;
   containerClass?: string;
 }
 
@@ -32,12 +32,10 @@ watch(() => props.isReady, (newValue) => {
   if (newValue) {
     showNotification.value = true;
     
-    // Clear any existing timeout
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
     
-    // Set timeout to hide notification
     timeoutId = setTimeout(() => {
       showNotification.value = false;
       timeoutId = null;

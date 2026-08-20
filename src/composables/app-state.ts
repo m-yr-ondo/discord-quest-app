@@ -30,7 +30,6 @@ export interface UseGlobalStateReturn {
 }
 export const useGlobalState = createGlobalState(
   () => {
-    // state
     const page = shallowRef<Pages>(Pages.HOME)
 
     const logs = shallowRef<AppLogObject[]>([])
@@ -39,10 +38,8 @@ export const useGlobalState = createGlobalState(
 
     const theme = shallowRef<Theme>(loadSettings().theme)
 
-    // getters
     const doubleCount = computed(() => count.value * 2)
 
-    // actions
     function increment() {
       count.value++
     }
@@ -64,7 +61,6 @@ export const useGlobalState = createGlobalState(
       saveSettings({ version: 1, theme: newTheme })
     }
 
-    // Apply theme at startup
     applyThemeToDocument(theme.value)
 
     function addLog(type: string | 'info' | 'error' | 'warning' | 'debug' , newLog?: string) {

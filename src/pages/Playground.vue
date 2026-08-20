@@ -6,7 +6,6 @@
             connected: {{ isConnected }}
         </button>
 
-        <!-- Logs Section -->
         <div class="mt-4 p-4 border rounded text-app-text border-app-border">
             <div class="flex items-center justify-between mb-2">
                 <h2 class="text-lg font-semibold mb-2">Logs</h2>
@@ -15,10 +14,6 @@
             </div>
 
             <div class="max-h-64 overflow-y-auto p-2 rounded">
-                <!-- <div v-if="logs.length === 0" class="text-gray-400">No logs available.</div>
-                <ul v-else class="list-none">
-                    <li v-for="(log, index) in logs" :key="index" class="text-sm text-gray-400">{{ log }}</li>
-                </ul> -->
                 <div v-if="logs.length === 0" class="text-app-text-muted">No logs available.</div>
                 <ul v-else class="list-none">
                     <li v-for="(log, index) in logs" :key="index" class="text-sm">
@@ -73,7 +68,6 @@ function discordTest() {
         activity_json: JSON.stringify({
             app_id: appIdCode,
             details: 'Jhabol',
-            // details: 'xmonad -> dwm -> spectrwm -> i3 -> bspwm -> qtile -> hyrpland -> xfce -> gnome -> sway',
             state: "/jhabol",
             activity_kind: ActivityKind.Watching,
             timestamp: createAgoTimestamp('1h 30m')
@@ -83,8 +77,6 @@ function discordTest() {
     isConnected.value = true;
 }
 
-// function to create timestamp behind current time.
-// example: input is `4h 30m` means timestamp should start from 4 hours and 30 minutes behind current time.
 function createAgoTimestamp(input: string) {
     const time = input.split(' ');
     let hours = 0;

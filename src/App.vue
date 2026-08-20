@@ -11,8 +11,6 @@ import UpdatePrompt from './components/UpdatePrompt.vue';
 
 const appState = useGlobalState();
 const { page } = appState;
-// Tauri's Update object contains private class fields. A deep Vue ref would
-// proxy those fields and make downloadAndInstall fail at runtime.
 const availableUpdate = shallowRef<Update | null>(null);
 const checkingForUpdate = ref(false);
 const installingUpdate = ref(false);
@@ -108,5 +106,4 @@ onMounted(checkForUpdates);
 </template>
 
 <style>
-/* Global styles are managed by Tailwind CSS */
 </style>
