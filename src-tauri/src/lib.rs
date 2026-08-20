@@ -1,4 +1,3 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use once_cell::sync::OnceCell;
 use std::env;
 use std::path::Path;
@@ -8,7 +7,6 @@ use tauri::{path::BaseDirectory, AppHandle, Emitter, Listener, Manager};
 mod rpc;
 mod runner;
 
-// Global static instance of the Discord client
 static DISCORD_CLIENT: OnceCell<Mutex<Option<rpc::Client>>> = OnceCell::new();
 
 fn get_discord_client() -> &'static Mutex<Option<rpc::Client>> {
@@ -46,15 +44,12 @@ async fn create_fake_game(
         game_folder_path.join(executable_name)
     );
 
-    // Ok(format!("Dummy executable copied to: {:?}", target_executable_path))
     match std::fs::create_dir_all(&game_folder_path) {
         Ok(_) => {
             println!("Successfully created directory: {:?}", game_folder_path);
         }
         Err(e) => return Err(format!("Failed to create game folder: {}", e)),
     };
-    // copy the dummy executable to the created folder
-    // there is a `template.exe` file along the final build.
     let resource_path = handle
         .path()
         .resolve("data/src-win.exe", BaseDirectory::Resource)
@@ -90,11 +85,9 @@ async fn run_background_process(
         .join(app_id.to_string())
         .join(normalized_path);
     let executable_path = game_folder_path.join(executable_name);
-    // const DETACHED_PROCESS: u32 = 0x00000008;
-    // const CREATE_NO_WINDOW: u32 = 0x08000000; // Hide the window
     match std::process::Command::new(&executable_path)
         .args(["--title", name])
-        .current_dir(game_folder_path) // Set working directory to the game folder
+        .current_dir(game_folder_path)
         .spawn()
     {
         Ok(_) => Ok("Process started successfully".to_string()),
@@ -104,7 +97,6 @@ async fn run_background_process(
 
 #[tauri::command(rename_all = "snake_case")]
 async fn stop_process(exec_name: String) -> Result<(), String> {
-    // Stop the process using taskkill command
     let output = std::process::Command::new("taskkill")
         .arg("/F")
         .arg("/IM")
@@ -122,9 +114,6 @@ async fn stop_process(exec_name: String) -> Result<(), String> {
     }
 }
 
-/// Usage: Calling from JS:
-/// ```javascript
-/// await invoke('connect_to_discord_rpc_3', json, 'connect' | 'disconnect');
 #[tauri::command(rename_all = "snake_case")]
 fn connect_to_discord_rpc_3(handle: AppHandle, activity_json: String, action: String) {
     let app = handle.clone();
@@ -142,9 +131,7 @@ fn connect_to_discord_rpc_3(handle: AppHandle, activity_json: String, action: St
 
     let client_option = {
         let mut client_guard = get_discord_client().lock().unwrap();
-        // Take the client out, leaving None in its place
         client_guard.take()
-        // MutexGuard is dropped here at the end of scope
     };
 
     let task = tauri::async_runtime::spawn(async move {
@@ -179,16 +166,13 @@ fn connect_to_discord_rpc_3(handle: AppHandle, activity_json: String, action: St
             let disconnect_task = tauri::async_runtime::spawn(async move {
                 let client_option = {
                     let mut client_guard = get_discord_client().lock().unwrap();
-                    // Take the client out, leaving None in its place
                     client_guard.take()
-                    // MutexGuard is dropped here at the end of scope
                 };
                 if let Some(client) = client_option {
                     client.discord.disconnect().await;
                     println!("Disconnected from Discord RPC inner");
                 }
             });
-            // disconnect_task.abort();
         });
     });
 
@@ -198,16 +182,36 @@ fn connect_to_discord_rpc_3(handle: AppHandle, activity_json: String, action: St
     });
 }
 
-#[tauri::command(rename_all = "snake_case")]
-async fn fetch_gamelist_gh_mirror() -> tauri::ipc::Response {
-    let res = tauri_plugin_http::reqwest::get("https://m-yr-ondo.github.io/discord-quest-app/detectable.json").await;
-    tauri::ipc::Response::new(res.unwrap().text().await.unwrap())
+async fn fetch_game_list(url: &str) -> Result<String, String> {
+    let response = tauri_plugin_http::reqwest::get(url)
+        .await
+        .map_err(|error| format!("Unable to request game list: {error}"))?;
+    let status = response.status();
+    let body = response
+        .text()
+        .await
+        .map_err(|error| format!("Unable to read game list response: {error}"))?;
+
+    if !status.is_success() {
+        let preview: String = body.chars().take(300).collect();
+        return Err(format!(
+            "Game list request failed with HTTP {}: {}",
+            status.as_u16(),
+            preview
+        ));
+    }
+
+    Ok(body)
 }
 
 #[tauri::command(rename_all = "snake_case")]
-async fn fetch_gamelist_from_discord() -> tauri::ipc::Response {
-    let res = tauri_plugin_http::reqwest::get("https://discord.com/api/applications/detectable").await;
-    tauri::ipc::Response::new(res.unwrap().text().await.unwrap())
+async fn fetch_gamelist_gh_mirror() -> Result<String, String> {
+    fetch_game_list("https://m-yr-ondo.github.io/discord-quest-app/detectable.json").await
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn fetch_gamelist_from_discord() -> Result<String, String> {
+    fetch_game_list("https://discord.com/api/applications/detectable").await
 }
 
 

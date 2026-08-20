@@ -68,22 +68,18 @@ pub fn create_activity(activity_json: String) -> Result<CreateActivityResult, St
         }
     }
 
-    // details
     if !details.is_empty() {
         rp = rp.details(details);
     }
 
-    // state
     if !state.is_empty() {
         rp = rp.state(state);
     }
 
-    // timestamp
     if let Some(ts) = timestamp {
         rp = rp.start_timestamp(ts as i64);
     }
 
-    // large_image_key
     if !large_image_key.is_empty() {
         rp = rp
             .assets(rpc::ds::activity::Assets::default().large(&large_image_key, large_image_text));

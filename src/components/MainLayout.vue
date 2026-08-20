@@ -3,8 +3,6 @@ import { Pages, useGlobalState } from '@/composables/app-state';
 import IconRustLang from './IconRustLang.vue';
 import IconVueJs from './IconVueJs.vue';
 
-// Layout component for consistent page structure
-
 const appState = useGlobalState();
 const { page, setPage } = appState;
 
@@ -52,13 +50,13 @@ const { page, setPage } = appState;
       </div>
     </header>
     
-    <main class="flex-grow overflow-y-auto">
+    <main class="flex-grow overflow-y-auto hide-scrollbar">
       <slot></slot>
     </main>
     
     <footer class="bg-app-panel border-t border-app-border mt-auto">
       <div class="container mx-auto px-4 py-4 text-center text-sm text-app-text-muted">
-        &copy; 2026 Built with <IconRustLang class="inline-block h-4 w-4 text-red-200 dark:text-white mx-0.5"/> Rust and <IconVueJs class="h-4 w-4 inline-block text-[#4FC08D] mx-0.5"/> Vue.js
+        &copy; 2026
       </div>
     </footer>
   </div>

@@ -40,7 +40,7 @@ fn parse_args() -> Config {
     let args: Vec<String> = env::args().collect();
     let mut config = Config::default();
     
-    let mut i = 1; // Skip program name
+    let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
             "--title" => {
@@ -68,7 +68,7 @@ fn calculate_text_width(hwnd: HWND, text: &str) -> i32 {
     unsafe {
         let hdc = GetDC(Some(hwnd));
         if hdc.is_invalid() {
-            return 200; // fallback width
+            return 200;
         }
         
         let text_bytes = text.as_bytes();
@@ -83,9 +83,9 @@ fn calculate_text_width(hwnd: HWND, text: &str) -> i32 {
         let _ = ReleaseDC(Some(hwnd), hdc);
         
         if result.as_bool() {
-            size.cx + 20 // Add 20px padding
+            size.cx + 20
         } else {
-            200 // fallback width
+            200
         }
     }
 }
@@ -95,21 +95,20 @@ fn create_label(parent_hwnd: HWND, text: &str, instance: HINSTANCE, x: i32, y:i3
     unsafe {
         let class_name = CString::new("STATIC").ok()?;
         let window_text = CString::new(text).ok()?;
-         // Calculate width dynamically if not provided
         let width = w.unwrap_or_else(|| calculate_text_width(parent_hwnd, text));
         let label_hwnd: Result<HWND, windows::core::Error> = CreateWindowExA(
-            WS_EX_TRANSPARENT, // Transparent background
-            PCSTR(class_name.as_ptr() as *const u8), // Class name
-            PCSTR(window_text.as_ptr() as *const u8), // Window text
-            WS_CHILD | WS_VISIBLE, // Basic window style
-            x,  // x position
-            y,  // y position
-            width, // width
-            h,  // height
-            Some(parent_hwnd), // Parent window
-            None, // Menu
-            Some(instance), // Instance handle
-            None, // Additional application data
+            WS_EX_TRANSPARENT,
+            PCSTR(class_name.as_ptr() as *const u8),
+            PCSTR(window_text.as_ptr() as *const u8),
+            WS_CHILD | WS_VISIBLE,
+            x,
+            y,
+            width,
+            h,
+            Some(parent_hwnd),
+            None,
+            Some(instance),
+            None,
         );
         
         match label_hwnd {
@@ -125,18 +124,18 @@ fn create_link_label(parent_hwnd: HWND, text: &str, instance: HINSTANCE) -> Opti
         let window_text = CString::new(text).ok()?;
         
         let label_hwnd = CreateWindowExA(
-            WS_EX_TRANSPARENT, // Transparent background
-            PCSTR(class_name.as_ptr() as *const u8), // Class name
-            PCSTR(window_text.as_ptr() as *const u8), // Window text
-            WS_CHILD | WS_VISIBLE | WINDOW_STYLE(0x00000000), // BS_PUSHBUTTON style
-            10,    // x position (will be updated)
-            HEIGHT - 80, // y position (bottom-left, 40 pixels from bottom)
-            150,   // width
-            25,    // height
-            Some(parent_hwnd), // Parent window
-            Some(HMENU(LINK_BUTTON_ID as _)), // Menu/ID
-            Some(instance), // Instance handle
-            None, // Additional application data
+            WS_EX_TRANSPARENT,
+            PCSTR(class_name.as_ptr() as *const u8),
+            PCSTR(window_text.as_ptr() as *const u8),
+            WS_CHILD | WS_VISIBLE | WINDOW_STYLE(0x00000000),
+            10,
+            HEIGHT - 80,
+            150,
+            25,
+            Some(parent_hwnd),
+            Some(HMENU(LINK_BUTTON_ID as _)),
+            Some(instance),
+            None,
         );
         
         match label_hwnd {
@@ -146,20 +145,18 @@ fn create_link_label(parent_hwnd: HWND, text: &str, instance: HINSTANCE) -> Opti
     }
 }
 
-// Helper function to reposition the link label to bottom-left
 fn position_link_label(parent_hwnd: HWND) {
     unsafe {
         if let Some(link_hwnd) = LINK_LABEL {
             let mut rect = RECT::default();
             if GetClientRect(parent_hwnd, &mut rect).is_ok() {
                 let client_height = rect.bottom - rect.top;
-                // Position 10 pixels from left, 30 pixels from bottom
                 let _ = SetWindowPos(
                     link_hwnd,
                     None,
-                    10,                    // x position
-                    client_height - 40,    // y position (40 pixels from bottom)
-                    0, 0,                  // width/height (ignored with SWP_NOSIZE)
+                    10,
+                    client_height - 40,
+                    0, 0,
                     SWP_NOZORDER | windows::Win32::UI::WindowsAndMessaging::SWP_NOSIZE,
                 );
             }
@@ -167,7 +164,6 @@ fn position_link_label(parent_hwnd: HWND) {
     }
 }
 
-// Window procedure for handling messages
 unsafe extern "system" fn window_proc(
     hwnd: HWND,
     msg: u32,
@@ -180,13 +176,11 @@ unsafe extern "system" fn window_proc(
             LRESULT(0)
         }
         WM_CTLCOLORSTATIC => {
-            // Make static controls (labels) have transparent backgrounds
             let hdc = HDC(wparam.0 as *mut _);
             SetBkMode(hdc, TRANSPARENT);
             LRESULT(GetStockObject(NULL_BRUSH).0 as isize)
         }
         WM_SIZE => {
-            // Reposition the link label when window is resized
             position_link_label(hwnd);
             DefWindowProcA(hwnd, msg, wparam, lparam)
         } 
@@ -216,16 +210,15 @@ fn create_native_window(title: &str) -> Result<(HWND, HINSTANCE), Box<dyn std::e
         let class_name = CString::new("DiscordQuestCompleter")?;
         let window_title = CString::new(title)?;
 
-        // Create a white background brush
         let brush = windows::Win32::Graphics::Gdi::CreateSolidBrush(
-            COLORREF(0x00FFFFFF) // White
+            COLORREF(0x00FFFFFF)
         );
 
         let wc = WNDCLASSA {
             lpfnWndProc: Some(window_proc),
             hInstance: HINSTANCE(instance.0),
             lpszClassName: PCSTR(class_name.as_ptr() as *const u8),
-            hbrBackground: brush, // Set background brush
+            hbrBackground: brush,
             ..Default::default()
         };
 
@@ -270,7 +263,6 @@ fn main() {
     let _tray = create_tray_icon(tray_menu, &config.title);
  
 
-    // Create native Windows window
     let (hwnd, instance) = match create_native_window(&config.title) {
         Ok(result) => result,
         Err(e) => {
@@ -279,11 +271,10 @@ fn main() {
         }
     };
     
-    // Create a Windows label to display the title at the top
-    let title_label_hwnd = create_label(hwnd, &config.title, instance,10,  // x position
-            40,  // y position  
+    let title_label_hwnd = create_label(hwnd, &config.title, instance,10,
+            40,
            None,
-            20,  // height
+            20,
     );
 
     let _app_label_hwnd = create_label(hwnd, "Discord Quest Completer", instance, 10, 10, None, 20);
@@ -291,10 +282,8 @@ fn main() {
         let _app_label_hwnd = create_label(hwnd, "This program is part of the Discord Quest Completer", instance, 10, 60, None, 20);
     
 
-    // Create a link label anchored to the bottom-left
     let link_label_hwnd = create_link_label(hwnd, "Source on Github", instance);
     
-    // Store control references in static variables
     unsafe {
         TITLE_LABEL = title_label_hwnd;
         LINK_LABEL = link_label_hwnd;
@@ -302,34 +291,29 @@ fn main() {
     
     unsafe { 
         if config.start_minimized {
-            // Only modify window styles when starting minimized
             let ex_style = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
             let new_ex_style = (ex_style & !WS_EX_APPWINDOW.0 as isize) |
-                WS_EX_TOOLWINDOW.0 as isize | // Make the window a tool window (so it doesn't show in the taskbar)
-                WS_EX_TRANSPARENT.0 as isize | // Make the window transparent
-                WS_EX_LAYERED.0 as isize; // WS_EX_LAYERED make the window layered (for transparency)
+                WS_EX_TOOLWINDOW.0 as isize |
+                WS_EX_TRANSPARENT.0 as isize |
+                WS_EX_LAYERED.0 as isize;
             
             SetWindowLongPtrA(hwnd, GWL_EXSTYLE, new_ex_style);
             let _ = ShowWindow(hwnd, SW_HIDE);
         } else {
-            // For normal window, just show it without modifying styles
             let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
         }
         
-        // Windows message loop
         let mut msg = MSG::default();
         loop {
-            // Handle tray event
             if let Ok(event) = tray_icon::menu::MenuEvent::receiver().try_recv() {
                 if event.id == quit_i.id() {
                     PostQuitMessage(0);
                 }
 
                 if event.id == show_i.id() {
-                    // Always restore window styles for normal display when showing from tray
                     let ex_style = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
                     let new_ex_style = (ex_style & !(WS_EX_TOOLWINDOW.0 as isize | WS_EX_TRANSPARENT.0 as isize | WS_EX_LAYERED.0 as isize)) |
-                        WS_EX_APPWINDOW.0 as isize; // Restore WS_EX_APPWINDOW to show in taskbar
+                        WS_EX_APPWINDOW.0 as isize;
                     
                     SetWindowLongPtrA(hwnd, GWL_EXSTYLE, new_ex_style);
                     let _ = ShowWindow(hwnd, SW_SHOWNORMAL);
@@ -337,12 +321,11 @@ fn main() {
                 }
 
                 if event.id == hide_i.id() {
-                    // Hide window to tray (similar to --tray startup behavior)
                     let ex_style = GetWindowLongPtrA(hwnd, GWL_EXSTYLE);
                     let new_ex_style = (ex_style & !WS_EX_APPWINDOW.0 as isize) |
-                        WS_EX_TOOLWINDOW.0 as isize | // Make the window a tool window (so it doesn't show in the taskbar)
-                        WS_EX_TRANSPARENT.0 as isize | // Make the window transparent
-                        WS_EX_LAYERED.0 as isize; // WS_EX_LAYERED make the window layered (for transparency)
+                        WS_EX_TOOLWINDOW.0 as isize |
+                        WS_EX_TRANSPARENT.0 as isize |
+                        WS_EX_LAYERED.0 as isize;
                     
                     SetWindowLongPtrA(hwnd, GWL_EXSTYLE, new_ex_style);
                     let _ = ShowWindow(hwnd, SW_HIDE);

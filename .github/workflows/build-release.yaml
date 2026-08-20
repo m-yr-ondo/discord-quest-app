@@ -84,7 +84,6 @@ jobs:
             exit 1
           fi
       
-      # Build src-win
       - name: Build src-win project x86_64 binary
         if: matrix.platform == 'windows-latest'
         shell: bash

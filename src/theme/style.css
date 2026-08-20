@@ -1,16 +1,14 @@
 @import "tailwindcss";
 
-/*
- * Theme tokens — Tailwind v4 CSS-first variables.
- *
- * Original theme: follows OS light/dark via @media (prefers-color-scheme).
- * Neon theme: always dark, activated by [data-theme="neon"].
- *
- * Exposed as Tailwind utilities via @theme inline so they can be used as
- * bg-app-bg, text-app-text, etc.
- */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
-/* ── Original light (default) ── */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 :root {
   --app-bg: #f3f4f6;
   --app-panel: #ffffff;
@@ -25,7 +23,6 @@
   --app-danger: #dc2626;
 }
 
-/* ── Original dark (OS prefers-color-scheme) ── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="neon"]):not([data-theme="ember"]):not([data-theme="obsidian"]) {
     --app-bg: #111827;
@@ -42,7 +39,6 @@
   }
 }
 
-/* ── Neon (always dark) ── */
 [data-theme="neon"] {
   --app-bg: #060618;
   --app-panel: #0d0d2b;
@@ -57,7 +53,6 @@
   --app-danger: #fb7185;
 }
 
-/* ── Ember (always dark, flat charcoal and orange) ── */
 [data-theme="ember"] {
   --app-bg: #0b0a09;
   --app-panel: #171514;
@@ -72,19 +67,18 @@
   --app-danger: #f87171;
 }
 
-/* ── Obsidian (black glass panels with purple arcade accents) ── */
 [data-theme="obsidian"] {
-  --app-bg: #050509;
-  --app-panel: #0b0b13;
-  --app-panel-hover: #151221;
-  --app-text: #f7f5ff;
-  --app-text-muted: #aaa5ba;
-  --app-accent: #8b5cf6;
-  --app-accent-hover: #a78bfa;
-  --app-border: #252033;
-  --app-border-strong: #443568;
-  --app-success: #4ade80;
-  --app-danger: #fb7185;
+  --app-bg: #000000;
+  --app-panel: #000000;
+  --app-panel-hover: #111111;
+  --app-text: #ffffff;
+  --app-text-muted: #9ca3af;
+  --app-accent: #ffffff;
+  --app-accent-hover: #e5e7eb;
+  --app-border: #1f1f1f;
+  --app-border-strong: #2f2f2f;
+  --app-success: #9ca3af;
+  --app-danger: #ffffff;
 }
 
 @theme inline {
