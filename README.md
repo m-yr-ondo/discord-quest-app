@@ -1,7 +1,7 @@
 <p>
   <h1 align="center">
     <a href="https://github.com/m-yr-ondo/discord-quest-app">
-      Discord Quest Completer
+      Discord Quest App
     </a>
   </h1>
 </p>
@@ -10,16 +10,16 @@
 [![Scheduled Rust checks](https://img.shields.io/github/actions/workflow/status/m-yr-ondo/discord-quest-app/rust-check.yml?branch=main&style=flat&label=scheduled%20build)](https://github.com/m-yr-ondo/discord-quest-app/actions/workflows/rust-check.yml?query=branch%3Amain+event%3Aschedule)
 
 
-> A quest completer for Discord. Discord Quest Completer. I don't know what to call this, but there it is.
+> A quest helper for Discord. Discord Quest App.
 
 A Windows desktop application for Discord Rich Presence and completing Discord Quest for games without needing to install the full actual games/applications. Perfect for completing Discord Quests and showing off your gaming status without the storage burden.
 
 
-![Discord Quest Completer](<docs/Screenshot 2026-08-06 190414.png>)
+![Discord Quest App](<docs/Screenshot 2026-08-06 190414.png>)
 
 ---
 
-## 📥 Installation
+## Installation
 
 ### Windows
 
@@ -81,13 +81,13 @@ EBWebView
 
 ---
 
-## ✨ Features
+## Features
 
 - Simulate playing verified Discord games without intalling a full game!
 - Complete Discord Quests requiring 15-minute gameplay (not yet tested for Stream the game Quests)
 - Only Discord Verified games are supported. The application fetches a list of games that Discord can automatically detect.
 
-## ⚙️ How It Works
+## How It Works
 
 This app creates small executable files that mimic the actual game processes that Discord looks for when detecting a verified game to use it for it's Rich Presence activity.
 When launched/played, the tiny executables trigger Discord's Rich Presence/Registed Games detection. Discord checks if Game exe name is running, sometimes it needs to be a folder where the game is supposed to be, thats how mainly it detects the Games, we can clearly see this on the "Registered Games" in the settings.
@@ -110,7 +110,7 @@ The dummy game executale files used by this program are placed in a folder calle
 - I want to complete the Quest but I don't want to install the game's anti-cheat, game is too big, or it won't run on my PC.
 - Useful for users with limited internet bandwidth or storage space
 
-<!-- ## 🚀 Planned Features and fixes
+<!-- ## Planned Features and fixes
 
 - Make the "Stop" button work again if process was terminated outside of app's control.
 - Persist games that added on the list so it wont reset.
@@ -119,19 +119,19 @@ The dummy game executale files used by this program are placed in a folder calle
 - Linux and MacOS support (if possible) -->
 
 
-## 🖥️ Supported Platforms
+## Supported Platforms
 
 - Windows 11 
 
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- 🦀 Rust
-- 🌐 Vue.js
-- 🧰 Tauri
+- Rust
+- Vue.js
+- Tauri
 
 
-### 🛠️ Development
+### Development
 
 Install dependencies for the Vue.js frontend using pnpm
 

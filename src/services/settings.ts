@@ -11,7 +11,7 @@ export type SettingsStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 const DEFAULT_SETTINGS: SavedSettings = {
     version: 1,
-    theme: 'original',
+    theme: 'obsidian',
 };
 
 function getBrowserStorage(): SettingsStorage {

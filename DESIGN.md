@@ -1,4 +1,4 @@
-# Discord Quest Completer Design System
+# Discord Quest App Design System
 
 ## 1. Atmosphere & Identity
 

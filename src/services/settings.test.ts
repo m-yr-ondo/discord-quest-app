@@ -19,8 +19,8 @@ class MemoryStorage {
 }
 
 describe('settings persistence', () => {
-    it('returns Original by default when storage is empty', () => {
-        expect(loadSettings(new MemoryStorage())).toEqual({ version: 1, theme: 'original' });
+    it('returns Obsidian by default when storage is empty', () => {
+        expect(loadSettings(new MemoryStorage())).toEqual({ version: 1, theme: 'obsidian' });
     });
 
     it('round-trips the Neon theme through storage', () => {
@@ -46,24 +46,24 @@ describe('settings persistence', () => {
         expect(loadSettings(storage)).toEqual({ version: 1, theme: 'obsidian' });
     });
 
-    it('returns Original when stored JSON is malformed', () => {
+    it('returns Obsidian when stored JSON is malformed', () => {
         const storage = new MemoryStorage();
         storage.setItem(SETTINGS_STORAGE_KEY, '{bad json');
 
-        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'original' });
+        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'obsidian' });
     });
 
-    it('returns Original when the stored theme is invalid', () => {
+    it('returns Obsidian when the stored theme is invalid', () => {
         const storage = new MemoryStorage();
         storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ version: 1, theme: 'cyberpunk' }));
 
-        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'original' });
+        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'obsidian' });
     });
 
-    it('returns Original when the stored version is unsupported', () => {
+    it('returns Obsidian when the stored version is unsupported', () => {
         const storage = new MemoryStorage();
         storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ version: 2, theme: 'neon' }));
 
-        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'original' });
+        expect(loadSettings(storage)).toEqual({ version: 1, theme: 'obsidian' });
     });
 });

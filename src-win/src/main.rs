@@ -30,7 +30,7 @@ struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            title: "Discord Quest Completer".to_string(),
+            title: "Discord Quest App".to_string(),
             start_minimized: false,
         }
     }
@@ -277,9 +277,9 @@ fn main() {
             20,
     );
 
-    let _app_label_hwnd = create_label(hwnd, "Discord Quest Completer", instance, 10, 10, None, 20);
+    let _app_label_hwnd = create_label(hwnd, "Discord Quest App", instance, 10, 10, None, 20);
     
-        let _app_label_hwnd = create_label(hwnd, "This program is part of the Discord Quest Completer", instance, 10, 60, None, 20);
+        let _app_label_hwnd = create_label(hwnd, "This program is part of the Discord Quest App", instance, 10, 60, None, 20);
     
 
     let link_label_hwnd = create_link_label(hwnd, "Source on Github", instance);
