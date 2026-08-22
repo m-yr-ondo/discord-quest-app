@@ -5,7 +5,6 @@ import { ref, watch } from 'vue';
 import { message } from '@tauri-apps/plugin-dialog'; 
 import { invoke } from '@tauri-apps/api/core';
 import { useGlobalState } from './app-state';
-import { normalizeGameCatalogEntry } from '@/services/game-executables';
 import { withGameArtwork } from '@/services/game-artwork';
 
 function parseGameListResponse(response: unknown): unknown {
@@ -134,7 +133,7 @@ export function useFetchGameList() {
         if (errorGH.value) {
             addLog('error', 'Error fetching game list from GitHub mirror: ' + getErrorMessage(errorGH.value));
         } else if (isValidGameList(gameListGHMirror.value)) {
-            gameDB.value = gameListGHMirror.value.map(normalizeGameCatalogEntry).map(withGameArtwork);
+            gameDB.value = gameListGHMirror.value.map(withGameArtwork);
             remoteRefreshed.value = true;
             addLog('Using refreshed game list from GitHub mirror. ' + gameListGHMirror.value.length + ' entries.');
             return;
@@ -151,7 +150,7 @@ export function useFetchGameList() {
         if (errorDiscord.value) {
             addLog('error', 'Error fetching game list from Discord: ' + getErrorMessage(errorDiscord.value));
         } else if (isValidGameList(gameListFromDiscord.value)) {
-            gameDB.value = gameListFromDiscord.value.map(normalizeGameCatalogEntry).map(withGameArtwork);
+            gameDB.value = gameListFromDiscord.value.map(withGameArtwork);
             remoteRefreshed.value = true;
             addLog('Using refreshed game list from Discord. ' + gameListFromDiscord.value.length + ' entries.');
             return;
@@ -176,7 +175,7 @@ export function useFetchGameList() {
         }
 
         if (isValidGameList(bundledGameList.value)) {
-            gameDB.value = bundledGameList.value.map(normalizeGameCatalogEntry).map(withGameArtwork);
+            gameDB.value = bundledGameList.value.map(withGameArtwork);
             addLog('Using bundled game list. ' + bundledGameList.value.length + ' entries.');
         }
 
