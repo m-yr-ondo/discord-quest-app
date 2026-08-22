@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { appLocalDataDir } from '@tauri-apps/api/path';
+import { openPath } from '@tauri-apps/plugin-opener';
 import { useGlobalState } from '@/composables/app-state';
 import type { Theme } from '@/services/settings';
 
@@ -6,6 +8,14 @@ const { theme, setTheme } = useGlobalState();
 
 function handleThemeChange(newTheme: Theme) {
   setTheme(newTheme);
+}
+
+async function openAppDataFolder() {
+  try {
+    await openPath(await appLocalDataDir());
+  } catch (error) {
+    console.error('Failed to open the app data folder.', error);
+  }
 }
 </script>
 
@@ -99,6 +109,21 @@ function handleThemeChange(newTheme: Theme) {
           </div>
         </label>
       </fieldset>
+    </div>
+
+    <div class="bg-app-panel p-6 rounded-lg shadow mt-6">
+      <h2 class="text-xl font-semibold text-app-text mb-4">
+        Application data
+      </h2>
+
+      <button
+        type="button"
+        class="w-full rounded-lg bg-app-accent px-4 py-3 font-medium transition-colors hover:bg-app-accent-hover focus:outline-none focus:ring-2 focus:ring-app-accent focus:ring-offset-2 focus:ring-offset-app-panel"
+        :class="theme === 'obsidian' ? 'text-black' : 'text-white'"
+        @click="openAppDataFolder"
+      >
+        Open data folder
+      </button>
     </div>
   </div>
 </template>

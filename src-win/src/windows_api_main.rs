@@ -27,7 +27,7 @@ struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            title: "Discord Quest Completer (runner)".to_string(),
+            title: "Discord Quest App (runner)".to_string(),
             start_minimized: false,
         }
     }

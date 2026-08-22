@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useGlobalState } from '@/composables/app-state';
+
 defineProps<{
     version: string;
     progress: number | null;
@@ -10,6 +12,8 @@ const emit = defineEmits<{
     install: [];
     dismiss: [];
 }>();
+
+const { theme } = useGlobalState();
 </script>
 
 <template>
@@ -35,7 +39,8 @@ const emit = defineEmits<{
                     Later
                 </button>
                 <button
-                    class="rounded-md bg-app-accent px-3 py-2 text-sm text-white hover:bg-app-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+                    class="rounded-md bg-app-accent px-3 py-2 text-sm hover:bg-app-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+                    :class="theme === 'obsidian' ? 'text-black' : 'text-white'"
                     :disabled="installing"
                     @click="emit('install')"
                 >

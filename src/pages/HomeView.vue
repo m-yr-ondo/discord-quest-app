@@ -39,7 +39,7 @@ const {
     bundledReady,
     remoteRefreshed,
 } = useFetchGameList()
-const { addLog } = useGlobalState();
+const { addLog, theme } = useGlobalState();
 const shouldShowNotificationContainer = computed(() => {
     return isLoadingGH.value || isLoadingDiscord.value || isLoadingBundled.value ||
            (isReadyGH.value || isReadyDiscord.value || isReadyBundled.value);
@@ -464,7 +464,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     :duration="1500"
                     container-class="text-sm text-app-text-muted"
                 > 
-                    Game list from mirror fetched <span class="text-green-400">✓</span>
+                    Game list from mirror fetched
                 </TimedNotification>
 
                 <Transition 
@@ -483,7 +483,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     :duration="1500"
                     container-class="text-sm text-app-text-muted"
                 > 
-                    Game list from Discord fetched <span class="text-green-400">✓</span>
+                    Game list from Discord fetched
                 </TimedNotification>
 
                 
@@ -503,7 +503,7 @@ provide<GameActionsProvider>(GameActionsKey, {
                     :duration="1500"
                     container-class="text-sm text-app-text-muted"
                 > 
-                    Game list from bundle pre-loaded <span class="text-green-400">✓</span>
+                    Game list from bundle pre-loaded
                 </TimedNotification>
 
             </div>
@@ -593,7 +593,10 @@ provide<GameActionsProvider>(GameActionsKey, {
                                 <div class="relative inline-flex items-center">
                                     <div class="w-2 h-2 bg-white absolute rounded-full" style="left: 50%; top: 50%; transform: translate(-50%, -50%)"></div>
                                     <div class="relative inline-block">
-                                     <IconVerified class="w-5 h-5 text-app-accent"></IconVerified>
+                                     <IconVerified
+                                         class="w-5 h-5"
+                                         :class="theme === 'obsidian' ? 'text-black' : 'text-app-accent'"
+                                     />
                                     </div>
                                 </div>
                                 </div>

@@ -1,9 +1,10 @@
 pub use discord_sdk as ds;
-pub use tokio;
 
 pub struct Client {
     pub discord: ds::Discord,
+    #[allow(dead_code)]
     pub wheel: ds::wheel::Wheel,
+    #[allow(dead_code)]
     pub user: ds::user::User,
 }
 

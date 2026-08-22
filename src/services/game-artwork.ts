@@ -15,7 +15,7 @@ export function getDiscordGameCoverUrl(game: Pick<Game, 'id' | 'cover_image_hash
         return undefined;
     }
 
-    return `${DISCORD_CDN_BASE}/app-assets/${game.id}/${game.cover_image_hash}.png?size=512`;
+    return `${DISCORD_CDN_BASE}/app-icons/${game.id}/${game.cover_image_hash}.png?size=512`;
 }
 
 export function withGameArtwork(game: Game): Game {
