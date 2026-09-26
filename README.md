@@ -39,49 +39,7 @@ Alternatively, you can follow the [development setup instructions](#-development
 > If you don't have it installed, you can download it from [here](https://developer.microsoft.com/en-us/microsoft-edge/webview2).
 
 
-## Uninstall
-
-To uninstall the app, simply go to the folder where you extracted or placed the app and delete it's folder and thats it.
-
-The content of the folder may look like this:
-
-```text
-discord-quest-completer/
-├── discord-quest-completer.exe (main app)
-├── data/ 
-│   ├── src-win.exe (runner dummy template)
-├── games/
-│    ├── <game-id>/
-```
-
-<!-- COMMENT:
-  This folder on local app data seems to only exists when using the installer or when Web API like local storage was used? 
-  Bring the section back once it's verified it was also existing using the quick portable builds.
--->
-<!--
-**Other optional files to remove when uninstalling:**
-
-Delete the `me.markterence.discordquestcompleter` folder on `%localappdata%`. 
-
-```bash
-# Put this on File Explorer's address bar to navigate on the folder.
-%localappdata%/me.markterence.discordquestcompleter
-```
-
-The folder `%localappdata%/me.markterence.discordquestcompleter` contains the WebView2 files used by Tauri for the this app. The contents of the folder varies per-user but it may look this this:
-
-```
-EBWebView
-.cookies
-```
-
-
-> The `%localappdata%` is a system variable on Windows and is equivalent to `C:\Users\<YOUR USER>\AppData\Local\`.
--->
-
----
-
-## Features
+## ✨ Features
 
 - Simulate playing verified Discord games without intalling a full game!
 - Complete Discord Quests requiring 15-minute gameplay (not yet tested for Stream the game Quests)
@@ -92,34 +50,10 @@ EBWebView
 This app creates small executable files that mimic the actual game processes that Discord looks for when detecting a verified game to use it for it's Rich Presence activity.
 When launched/played, the tiny executables trigger Discord's Rich Presence/Registed Games detection. Discord checks if Game exe name is running, sometimes it needs to be a folder where the game is supposed to be, thats how mainly it detects the Games, we can clearly see this on the "Registered Games" in the settings.
 
-The dummy game executale files used by this program are placed in a folder called  `games/` folder relative to the main application's exe. As of release build v2025.10.07 the dummy executable file size is around 250kb, it could be smaller but it requires the end-users to install .NET Framework Runtime (which is sometimes comes pre-installed on an up-to-date Windows 11 PC's, so for now the dummy exe using WinAPI through C++ for compatibility rather than C#)
-
-> [!TIP]
-> After launching some games over a period of time, those files may accumulate. For a little maintenance, you can manually delete the created folders under the `games/` folder if you need to.
+The dummy game executale files used by this program are placed in a folder called  `games/` folder relative to the main application's exe. As of release build v2025.10.07 the dummy executable file size is around 250kb, it could be smaller but it requires the end-users to install .NET Framework Runtime (which is sometimes comes pre-installed on an up-to-date Windows 11 PC's, so for now the dummy exe using WinAPI through C++ for compatibility rather than C#
 
 
-<!--
-> _Currently, I am hesitant to add a file‑maintenance operation that deletes or clears the `games/` folder, because doing so may still cause unexpected issues. On Windows, the file system is case‑insensitive, so if you have a file named `Notes.txt` and you issue a command to delete `notes.txt`, Windows will still delete the `Notes.txt` file (the one that begins with a capital “N”)._
--->
-
-## Use Cases
-
-- Complete Discord Quests without downloading massive game files
-- Show-off playing the latest games on your status if you want to. (Even if you don't really have it.) (LOL)
-- Save disk space while still participating in Discord's Quest.
-- I want to complete the Quest but I don't want to install the game's anti-cheat, game is too big, or it won't run on my PC.
-- Useful for users with limited internet bandwidth or storage space
-
-<!-- ## Planned Features and fixes
-
-- Make the "Stop" button work again if process was terminated outside of app's control.
-- Persist games that added on the list so it wont reset.
-- Discord Activity Simulator/playground (Customizable rich presence for developers and custom activities)
-- Set custom activity status from supported games
-- Linux and MacOS support (if possible) -->
-
-
-## Supported Platforms
+## 🖥️ Supported Platforms
 
 - Windows 11 
 
@@ -170,14 +104,6 @@ The creators and maintainers of this project are not liable for any damages, acc
 Discord is a registered trademark of Discord Inc. It is referenced on this open-source project for descriptive and definition purposes only and does not imply any affiliation, sponsorship, or endorsement by Discord Inc in any way.
 
 ---
-
-<!--
-## Other Alternatives
-
-If you can't install this application for any reason, there is some steps on a gist from [aamiaa](https://github.com/aamiaa/) that allows you to use Discord client's Web Inspector and paste the code provided and complete the quest.
-
-See the guide here: https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb
--->
 
 
 ## License
