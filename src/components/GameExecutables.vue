@@ -226,7 +226,6 @@ function handleLaunch(executable: GameExecutable) {
             emit('install_and_play', {
                 game: props.game,
                 executable: {
-                    timer_minutes: timerMinutes.value[executable.name] ?? null,
                     path: getExecutablePath(executable),
                     segments: splitExecutableName(executable).length,
                     filename: getFilename(executable),
@@ -238,7 +237,6 @@ function handleLaunch(executable: GameExecutable) {
             emit('play', {
                 game: props.game,
                 executable: {
-                    timer_minutes: timerMinutes.value[executable.name] ?? null,
                     path: getExecutablePath(executable),
                     segments: splitExecutableName(executable).length,
                     filename: getFilename(executable),
