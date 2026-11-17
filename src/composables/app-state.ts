@@ -4,6 +4,7 @@ import { loadSettings, saveSettings, type Theme } from '@/services/settings'
 
 export const Pages = {
     HOME: 'home',
+    GAME_CHAIN: 'game-chain',
     PLAYGROUND: 'playground',
     SETTINGS: 'settings',
 } as const

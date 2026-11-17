@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, useTemplateRef, shallowRef, provide, nextTick, triggerRef, watch, onMounted, onUnmounted } from 'vue';
-import { onClickOutside, refDebounced, tryOnMounted } from '@vueuse/core';
+import { ref, computed, useTemplateRef, shallowRef, provide, onMounted, onUnmounted } from 'vue';
+import { onClickOutside, refDebounced } from '@vueuse/core';
 import { useFuse } from '@vueuse/integrations/useFuse'
 import { invoke } from '@tauri-apps/api/core';
-import { randomString } from '@/utils/random-string';
 import { GameActionsProvider, GameExecutable, type Game } from '@/types/types';
 import IconVerified from '@/components/IconVerified.vue';
 import { isEmpty } from 'lodash-es';
@@ -12,12 +11,11 @@ import GameArtwork from '@/components/GameArtwork.vue';
 import { GameActionsKey } from '@/constants/constants';
 import { path } from '@tauri-apps/api';
 import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { useFetchGameList } from '@/composables/fetch-gamelist';
 import { UseFuseOptions } from '@vueuse/integrations';
 import Fuse from 'fuse.js';
 import { useGlobalState } from '@/composables/app-state';
 import TimedNotification from '@/components/TimedNotification.vue';
-import { loadSavedGames, mergeGameCatalogEntry, rehydrateSavedGames, saveSavedGames } from '@/services/saved-games';
+import { useGameLibrary } from '@/composables/game-library';
 
 
 type DialogKey = 
@@ -36,9 +34,11 @@ const {
     isReadyBundled,
     isReadyDiscord,
     allFetchDone,
-    bundledReady,
-    remoteRefreshed,
-} = useFetchGameList()
+    gameList,
+    addGameToList: addLibraryGame,
+    removeGameFromList: removeLibraryGame,
+    saveSavedGames: saveLibraryGames,
+} = useGameLibrary()
 const { addLog, theme } = useGlobalState();
 const shouldShowNotificationContainer = computed(() => {
     return isLoadingGH.value || isLoadingDiscord.value || isLoadingBundled.value ||
@@ -58,6 +58,8 @@ const debouncedSearchQuery = refDebounced(searchQuery, 300)
 
 const searchResultsIsOpen = ref(false);
 const isOnSearchResults = ref(false);
+const isGameListSearchOpen = ref(false);
+const gameListSearchQuery = ref('');
 
 const currentlyPlaying = ref<string | null>(null);
 const timerIntervals = new Map<number, ReturnType<typeof setInterval>>();
@@ -153,46 +155,15 @@ const fuseOptions = computed<UseFuseOptions<Game>>(() => ({
 
 const { results: searchResults } = useFuse(debouncedSearchQuery, gameDB, fuseOptions)
 
-const gameList = ref<Game[]>([]);
 const selectedGameId = ref<string | null | undefined>(null);
 
-function hydrateSavedGames() {
-    const savedGames = loadSavedGames();
-    const savedGameIds = savedGames.map((game) => game.id);
-    const currentGames = new Map(gameList.value.map((game) => [game.id, game]));
-    const restoredGames = rehydrateSavedGames(savedGames, gameDB.value, randomString);
-    const restoredById = new Map(restoredGames.map((game) => [game.id, game]));
-
-    gameList.value = savedGameIds.flatMap((gameId) => {
-        const restoredGame = restoredById.get(gameId);
-        const currentGame = currentGames.get(gameId);
-
-        if (restoredGame && currentGame) {
-            return [mergeGameCatalogEntry(currentGame, restoredGame)];
-        }
-        if (restoredGame) {
-            return [restoredGame];
-        }
-        if (currentGame) {
-            return [currentGame];
-        }
-
-        return [];
-    });
-}
-
-watch(bundledReady, (isReady) => {
-    if (!isReady) {
-        return;
-    }
-
-    hydrateSavedGames();
-});
-
-watch(remoteRefreshed, (isRefreshed) => {
-    if (isRefreshed) {
-        hydrateSavedGames();
-    }
+const visibleGameList = computed(() => {
+    const query = gameListSearchQuery.value.trim().toLocaleLowerCase();
+    return [...gameList.value]
+        .filter((game) => !query
+            || game.name.toLocaleLowerCase().includes(query)
+            || game.aliases?.some((alias) => alias.toLocaleLowerCase().includes(query)))
+        .sort((first, second) => first.name.localeCompare(second.name));
 });
 
 const selectedGame = computed(() => {
@@ -210,23 +181,27 @@ function openSearchResults() {
 }
 
 function addGameToList(game: Game) {
-    if (!gameList.value.some(g => g.id === game.id)) {
-        gameList.value.push({
-            uid: randomString(),
-            ...game
-        });
-        saveSavedGames(gameList.value);
-    }
+    addLibraryGame(game);
 
     closeSearchResults();
+}
+
+function isGameOnList(gameId: string) {
+    return gameList.value.some((game) => game.id === gameId);
+}
+
+function toggleGameListSearch() {
+    isGameListSearchOpen.value = !isGameListSearchOpen.value;
+    if (!isGameListSearchOpen.value) {
+        gameListSearchQuery.value = '';
+    }
 }
 
 const forceRerenderKey = ref(0); 
 function removeGameFromList(game: Game) {
     const gameId = game.uid;
-    gameList.value = gameList.value.filter(game => game.uid !== gameId);
-    saveSavedGames(gameList.value);
-    if (selectedGame.value?.uid === gameId) { 
+    removeLibraryGame(game);
+    if (selectedGame.value?.uid === gameId) {
         selectedGameId.value = null;
         forceRerenderKey.value++; 
     }
@@ -285,6 +260,7 @@ async function createDummyGame(game: Game | null, executable: GameExecutable) {
         console.log('Game created:', result);
         gameToInstall.is_installed = true;
         executableItem.is_installed = true;
+        saveLibraryGames();
         return true;
     }
 }
@@ -678,8 +654,10 @@ provide<GameActionsProvider>(GameActionsKey, {
                                     </div>
                                 </div>
                                 <button @click="addGameToList(game.item)"
-                                    class="ml-2 px-3 py-1 text-sm bg-app-accent hover:bg-app-accent-hover text-white rounded-md">
-                                    Add game to list
+                                    :disabled="isGameOnList(game.item.id)"
+                                    class="ml-2 rounded-md px-3 py-1 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                    :class="isGameOnList(game.item.id) ? 'bg-app-panel-hover' : 'bg-app-accent hover:bg-app-accent-hover'">
+                                    {{ isGameOnList(game.item.id) ? 'Added' : 'Add game to list' }}
                                 </button>
                             </div>
                         </div>
@@ -695,14 +673,37 @@ provide<GameActionsProvider>(GameActionsKey, {
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
             <div class="bg-app-panel p-4 rounded-lg shadow">
-                <h2
-                    class="text-xl font-bold text-app-text mb-4 sticky top-0 bg-app-panel py-2 z-10">
-                    Games</h2>
+                <div class="mb-4 flex items-center justify-between sticky top-0 bg-app-panel py-2 z-10">
+                    <h2 class="text-xl font-bold text-app-text">Games</h2>
+                    <button
+                        type="button"
+                        class="rounded-md p-2 text-app-text-muted hover:bg-app-panel-hover hover:text-app-text"
+                        aria-label="Search games in your list"
+                        @click="toggleGameListSearch"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="m20 20-4-4" />
+                        </svg>
+                    </button>
+                </div>
+                <div v-if="isGameListSearchOpen" class="mb-4">
+                    <input
+                        v-model="gameListSearchQuery"
+                        type="search"
+                        placeholder="Search your games"
+                        class="w-full rounded-md border border-app-border bg-app-panel px-3 py-2 text-app-text outline-none focus:border-app-accent"
+                        aria-label="Search games in your list"
+                    />
+                </div>
                 <div v-if="gameList.length === 0" class="text-app-text-muted text-center py-8">
                     No games selected. Search and add games from the search bar.
                 </div>
+                <div v-else-if="visibleGameList.length === 0" class="text-app-text-muted text-center py-8">
+                    No matching games in your list.
+                </div>
                 <div v-else class="space-y-4">
-                    <div v-for="game in gameList" :key="game.id" 
+                    <div v-for="game in visibleGameList" :key="game.id"
                         class="p-3 border border-app-border rounded-lg
                         hover:bg-app-panel-hover transition-colors 
                         duration-200 ease-in-out" 

@@ -68,6 +68,18 @@ describe('saved games persistence', () => {
         expect(loadSavedGameIds(storage)).toEqual(['one']);
     });
 
+    it('persists installed executable references for chain setup', () => {
+        const storage = new MemoryStorage();
+        const game = makeGame('one', 'One');
+        game.executables[0]!.is_installed = true;
+
+        saveSavedGames([game], storage);
+
+        const restored = rehydrateSavedGames(loadSavedGames(storage), [makeGame('one', 'One')], () => 'uid-1');
+        expect(restored[0]?.is_installed).toBe(true);
+        expect(restored[0]?.executables[0]?.is_installed).toBe(true);
+    });
+
     it('rejects malformed saved data', () => {
         const storage = new MemoryStorage();
         storage.setItem('discord-quest-completer:saved-game-ids', '{bad json');

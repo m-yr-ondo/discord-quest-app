@@ -99,6 +99,7 @@
 
 <script setup lang="ts">
 import { EXECUTABLE_OS, GameActionsKey } from '@/constants/constants';
+import { TIMER_OPTIONS } from '@/constants/timers';
 import { GameActionsProvider, type Game, type GameExecutable } from '@/types/types';
 import { path, app } from '@tauri-apps/api';
 import { computed, inject, ref } from 'vue';
@@ -119,15 +120,7 @@ const emit = defineEmits<{
 const gameActions = inject<GameActionsProvider>(GameActionsKey);
 const timerMinutes = ref<Record<string, number | null>>({});
 const openTimerMenu = ref<string | null>(null);
-const timerOptions = [
-    { minutes: 2, label: '2 min' },
-    { minutes: 20, label: '20 min' },
-    { minutes: 45, label: '45 min' },
-    { minutes: 60, label: '1 hr' },
-    { minutes: 120, label: '2 hr' },
-    { minutes: 180, label: '3 hr' },
-    { minutes: 300, label: '5 hr' },
-];
+const timerOptions = TIMER_OPTIONS;
 
 function toggleTimerMenu(executable: GameExecutable) {
     if (gameActions?.isExecutableRunning(executable)) {

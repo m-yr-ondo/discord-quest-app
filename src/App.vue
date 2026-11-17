@@ -5,6 +5,7 @@ import { relaunch } from '@tauri-apps/plugin-process';
 import MainLayout from './components/MainLayout.vue';
 import { Pages, useGlobalState } from './composables/app-state';
 import HomeView from './pages/HomeView.vue';
+import GameChainView from './pages/GameChainView.vue';
 import Playground from './pages/Playground.vue';
 import SettingsView from './pages/SettingsView.vue';
 import UpdatePrompt from './components/UpdatePrompt.vue';
@@ -100,6 +101,7 @@ onMounted(checkForUpdates);
   />
   <MainLayout>
     <HomeView v-show="page === Pages.HOME"/>
+    <GameChainView v-show="page === Pages.GAME_CHAIN"/>
     <Playground v-show="page === Pages.PLAYGROUND"/>
     <SettingsView v-show="page === Pages.SETTINGS"/>
   </MainLayout>

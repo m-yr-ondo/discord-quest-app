@@ -8,6 +8,7 @@ export type SavedGameSnapshot = {
     readonly id: string;
     readonly icon_url?: string;
     readonly cover_image_url?: string;
+    readonly installed_executables?: readonly string[];
 };
 
 type SavedGamesRecordV1 = {
@@ -46,7 +47,10 @@ function isSavedGamesRecord(value: unknown): value is SavedGamesRecord {
 
                 return typeof game.id === 'string'
                     && (!('icon_url' in game) || typeof game.icon_url === 'string')
-                    && (!('cover_image_url' in game) || typeof game.cover_image_url === 'string');
+                    && (!('cover_image_url' in game) || typeof game.cover_image_url === 'string')
+                    && (!('installed_executables' in game)
+                        || (Array.isArray(game.installed_executables)
+                            && game.installed_executables.every((name: unknown) => typeof name === 'string')));
             });
     }
 
@@ -101,7 +105,9 @@ export function saveSavedGameIds(
 }
 
 export function saveSavedGames(
-    games: readonly Pick<Game, 'id' | 'icon_url' | 'cover_image_url'>[],
+    games: readonly (Pick<Game, 'id' | 'icon_url' | 'cover_image_url'> & {
+        executables?: Game['executables'];
+    })[],
     storage: SavedGamesStorage = getBrowserStorage(),
 ): void {
     const uniqueGames = new Map<string, SavedGameSnapshot>();
@@ -110,6 +116,13 @@ export function saveSavedGames(
             id: game.id,
             ...(game.icon_url ? { icon_url: game.icon_url } : {}),
             ...(game.cover_image_url ? { cover_image_url: game.cover_image_url } : {}),
+            ...(game.executables?.some((executable) => executable.is_installed)
+                ? {
+                    installed_executables: (game.executables ?? [])
+                        .filter((executable) => executable.is_installed)
+                        .map((executable) => executable.name),
+                }
+                : {}),
         });
     });
 
@@ -137,6 +150,9 @@ export function rehydrateSavedGames(
             icon_url: savedGame.icon_url,
             cover_image_url: savedGame.cover_image_url,
         };
+        const installedExecutables = typeof savedGame === 'string'
+            ? []
+            : savedGame.installed_executables ?? [];
 
         return [{
             ...catalogGame,
@@ -144,9 +160,11 @@ export function rehydrateSavedGames(
             cover_image_url: catalogGame.cover_image_url ?? savedArtwork.cover_image_url,
             uid: createUid(),
             is_running: false,
+            is_installed: installedExecutables.length > 0,
             executables: catalogGame.executables.map((executable) => ({
                 ...executable,
                 is_running: false,
+                is_installed: installedExecutables.includes(executable.name),
             })),
         }];
     });

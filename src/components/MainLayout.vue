@@ -28,6 +28,15 @@ const { page, setPage } = appState;
               </a>
             </li> 
             <li>
+              <a href="#"
+                class="text-app-text hover:text-app-accent-hover transition-colors"
+                :class="{ 'text-app-accent': page === Pages.GAME_CHAIN }"
+                @click.prevent="setPage(Pages.GAME_CHAIN)"
+              >
+                Chain
+              </a>
+            </li>
+            <li>
               <a href="#" 
                 class="text-app-text hover:text-app-accent-hover transition-colors"
                 :class="{ 'text-app-accent': page === Pages.PLAYGROUND }"
