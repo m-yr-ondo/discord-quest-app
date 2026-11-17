@@ -60,16 +60,45 @@ const searchResultsIsOpen = ref(false);
 const isOnSearchResults = ref(false);
 
 const currentlyPlaying = ref<string | null>(null);
+const timerIntervals = new Map<number, ReturnType<typeof setInterval>>();
 let unlistenProcessStopped: UnlistenFn | undefined;
+
+function clearTimerCountdown(processId?: number) {
+    if (processId === undefined) {
+        return;
+    }
+    const interval = timerIntervals.get(processId);
+    if (interval !== undefined) {
+        clearInterval(interval);
+        timerIntervals.delete(processId);
+    }
+}
+
+function startTimerCountdown(executable: GameExecutable) {
+    if (executable.process_id === undefined || executable.timer_remaining_seconds === undefined) {
+        return;
+    }
+    clearTimerCountdown(executable.process_id);
+    const interval = setInterval(() => {
+        if (executable.timer_paused || executable.timer_remaining_seconds === undefined) {
+            return;
+        }
+        executable.timer_remaining_seconds = Math.max(0, executable.timer_remaining_seconds - 1);
+    }, 1000);
+    timerIntervals.set(executable.process_id, interval);
+}
 
 onMounted(async () => {
     unlistenProcessStopped = await listen<number>('game_process_stopped', ({ payload }) => {
         for (const game of gameList.value) {
             for (const executable of game.executables) {
                 if (executable.process_id === payload) {
+                    clearTimerCountdown(payload);
                     executable.is_running = false;
                     executable.process_id = undefined;
                     executable.timer_minutes = null;
+                    executable.timer_remaining_seconds = undefined;
+                    executable.timer_paused = false;
                     if (!game.executables.some((item) => item.is_running)) {
                         game.is_running = false;
                     }
@@ -85,6 +114,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
     unlistenProcessStopped?.();
+    timerIntervals.forEach((interval) => clearInterval(interval));
+    timerIntervals.clear();
 });
 
 
@@ -296,8 +327,13 @@ async function playGame({game, executable}: {game: Game, executable: GameExecuta
             const processId = await invoke<number>('run_background_process', payload);
             executableItem.process_id = processId;
             executableItem.timer_minutes = executable.timer_minutes ?? null;
+            executableItem.timer_remaining_seconds = executable.timer_minutes
+                ? executable.timer_minutes * 60
+                : undefined;
+            executableItem.timer_paused = false;
             gameToPlay.is_running = true;
             executableItem.is_running = true; 
+            startTimerCountdown(executableItem);
         }
        
     } catch (error) {
@@ -323,6 +359,7 @@ async function stopPlaying({game, executable}: {game: Game, executable: GameExec
             return;
         }
         try {
+            clearTimerCountdown(executableItem.process_id);
             await invoke('stop_process', {
                 process_id: executableItem.process_id,
             })
@@ -336,12 +373,64 @@ async function stopPlaying({game, executable}: {game: Game, executable: GameExec
             executableItem.is_running = false;
             executableItem.process_id = undefined;
             executableItem.timer_minutes = null;
+            executableItem.timer_remaining_seconds = undefined;
+            executableItem.timer_paused = false;
         } finally {
             gameToPlay.is_running = false;
             executableItem.is_running = false;
             executableItem.process_id = undefined;
             executableItem.timer_minutes = null;
+            executableItem.timer_remaining_seconds = undefined;
+            executableItem.timer_paused = false;
         }
+    }
+}
+
+async function pauseTimer({ executable }: { game: Game; executable: GameExecutable }) {
+    if (executable.process_id === undefined) {
+        return;
+    }
+    try {
+        executable.timer_remaining_seconds = await invoke<number>('pause_process_timer', {
+            process_id: executable.process_id,
+        });
+        executable.timer_paused = true;
+        clearTimerCountdown(executable.process_id);
+    } catch (error) {
+        addLog('error', `Failed to pause timer: ${String(error)}`);
+    }
+}
+
+async function resumeTimer({ executable }: { game: Game; executable: GameExecutable }) {
+    if (executable.process_id === undefined) {
+        return;
+    }
+    try {
+        executable.timer_remaining_seconds = await invoke<number>('resume_process_timer', {
+            process_id: executable.process_id,
+        });
+        executable.timer_paused = false;
+        startTimerCountdown(executable);
+    } catch (error) {
+        addLog('error', `Failed to resume timer: ${String(error)}`);
+    }
+}
+
+async function cancelTimer({ executable }: { game: Game; executable: GameExecutable }) {
+    if (executable.process_id === undefined) {
+        return;
+    }
+    try {
+        await invoke('cancel_process_timer', {
+            process_id: executable.process_id,
+        });
+        clearTimerCountdown(executable.process_id);
+        executable.timer_minutes = null;
+        executable.timer_remaining_seconds = undefined;
+        executable.timer_paused = false;
+        addLog('info', 'Game timer canceled');
+    } catch (error) {
+        addLog('error', `Failed to cancel timer: ${String(error)}`);
     }
 }
 
@@ -683,6 +772,9 @@ provide<GameActionsProvider>(GameActionsKey, {
                         @play="playGame"
                         @stop="stopPlaying"
                         @install_and_play="installAndPlay"
+                        @pause_timer="pauseTimer"
+                        @resume_timer="resumeTimer"
+                        @cancel_timer="cancelTimer"
                     />
 
                 </div>

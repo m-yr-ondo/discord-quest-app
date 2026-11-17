@@ -1,14 +1,25 @@
 use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 use std::env;
 use std::path::Path;
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{path::BaseDirectory, AppHandle, Emitter, Listener, Manager};
 
 mod rpc;
 mod runner;
 
 static DISCORD_CLIENT: OnceCell<Mutex<Option<rpc::Client>>> = OnceCell::new();
+static PROCESS_TIMERS: OnceCell<Mutex<HashMap<u32, ProcessTimer>>> = OnceCell::new();
+
+struct ProcessTimer {
+    remaining: Duration,
+    deadline: Option<Instant>,
+}
+
+fn get_process_timers() -> &'static Mutex<HashMap<u32, ProcessTimer>> {
+    PROCESS_TIMERS.get_or_init(|| Mutex::new(HashMap::new()))
+}
 
 fn get_discord_client() -> &'static Mutex<Option<rpc::Client>> {
     DISCORD_CLIENT.get_or_init(|| Mutex::new(None))
@@ -96,10 +107,38 @@ async fn run_background_process(
             let process_id = child.id();
 
             if let Some(minutes) = timer_minutes.filter(|minutes| *minutes > 0) {
+                get_process_timers().lock().unwrap().insert(
+                    process_id,
+                    ProcessTimer {
+                        remaining: Duration::from_secs(minutes * 60),
+                        deadline: Some(Instant::now() + Duration::from_secs(minutes * 60)),
+                    },
+                );
+
                 tauri::async_runtime::spawn(async move {
-                    tokio::time::sleep(Duration::from_secs(minutes * 60)).await;
-                    if terminate_process(process_id).is_ok() {
-                        let _ = handle.emit("game_process_stopped", process_id);
+                    loop {
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+
+                        let timer_state = {
+                            let timers = get_process_timers().lock().unwrap();
+                            timers.get(&process_id).map(|timer| {
+                                timer
+                                    .deadline
+                                    .is_some_and(|deadline| deadline <= Instant::now())
+                            })
+                        };
+
+                        if timer_state.is_none() {
+                            break;
+                        }
+
+                        if timer_state == Some(true) {
+                            get_process_timers().lock().unwrap().remove(&process_id);
+                            if terminate_process(process_id).is_ok() {
+                                let _ = handle.emit("game_process_stopped", process_id);
+                            }
+                            break;
+                        }
                     }
                 });
             }
@@ -112,7 +151,41 @@ async fn run_background_process(
 
 #[tauri::command(rename_all = "snake_case")]
 async fn stop_process(process_id: u32) -> Result<(), String> {
+    get_process_timers().lock().unwrap().remove(&process_id);
     terminate_process(process_id)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+fn pause_process_timer(process_id: u32) -> Result<u64, String> {
+    let mut timers = get_process_timers().lock().unwrap();
+    let timer = timers
+        .get_mut(&process_id)
+        .ok_or_else(|| "No active timer found for process".to_string())?;
+
+    if let Some(deadline) = timer.deadline.take() {
+        timer.remaining = deadline.saturating_duration_since(Instant::now());
+    }
+
+    Ok(timer.remaining.as_secs())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+fn resume_process_timer(process_id: u32) -> Result<u64, String> {
+    let mut timers = get_process_timers().lock().unwrap();
+    let timer = timers
+        .get_mut(&process_id)
+        .ok_or_else(|| "No active timer found for process".to_string())?;
+
+    if timer.deadline.is_none() {
+        timer.deadline = Some(Instant::now() + timer.remaining);
+    }
+
+    Ok(timer.remaining.as_secs())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+fn cancel_process_timer(process_id: u32) {
+    get_process_timers().lock().unwrap().remove(&process_id);
 }
 
 fn terminate_process(process_id: u32) -> Result<(), String> {
@@ -245,6 +318,9 @@ pub fn run() {
             greet,
             create_fake_game,
             stop_process,
+            pause_process_timer,
+            resume_process_timer,
+            cancel_process_timer,
             connect_to_discord_rpc_3,
             run_background_process,
             fetch_gamelist_gh_mirror,

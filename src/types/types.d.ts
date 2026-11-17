@@ -10,6 +10,8 @@ export interface GameExecutable {
   is_installed?: boolean;
   process_id?: number;
   timer_minutes?: number | null;
+  timer_remaining_seconds?: number;
+  timer_paused?: boolean;
 }
 export interface Game {
     uid?: string;
