@@ -22,7 +22,18 @@
                     </div>
                 </div>
 
-                <div class="justify-self-end">
+                <div class="flex items-center gap-2 justify-self-end">
+                    <select
+                        v-model="timerMinutes[executable.name]"
+                        :disabled="gameActions?.isExecutableRunning(executable)"
+                        class="bg-app-panel border border-app-border rounded-md px-2 py-1 text-app-text"
+                        aria-label="Stop timer"
+                    >
+                        <option :value="null">No timer</option>
+                        <option v-for="option in timerOptions" :key="option.minutes" :value="option.minutes">
+                            {{ option.label }}
+                        </option>
+                    </select>
                     <button class="text-white rounded-md px-3 py-1"
                     :class="[
                         {
@@ -44,7 +55,7 @@
 import { EXECUTABLE_OS, GameActionsKey } from '@/constants/constants';
 import { GameActionsProvider, type Game, type GameExecutable } from '@/types/types';
 import { path, app } from '@tauri-apps/api';
-import { computed, inject } from 'vue';
+import { computed, inject, ref } from 'vue';
 
 const props = defineProps<{
     game: Game
@@ -57,6 +68,16 @@ const emit = defineEmits<{
 }>();
 
 const gameActions = inject<GameActionsProvider>(GameActionsKey);
+const timerMinutes = ref<Record<string, number | null>>({});
+const timerOptions = [
+    { minutes: 2, label: '2 min' },
+    { minutes: 20, label: '20 min' },
+    { minutes: 45, label: '45 min' },
+    { minutes: 60, label: '1 hr' },
+    { minutes: 120, label: '2 hr' },
+    { minutes: 180, label: '3 hr' },
+    { minutes: 300, label: '5 hr' },
+];
 
 const filteredExecutables = computed(() => {
     return props.game.executables.filter(executable => {
@@ -112,6 +133,7 @@ function handleLaunch(executable: GameExecutable) {
             emit('install_and_play', {
                 game: props.game,
                 executable: {
+                    timer_minutes: timerMinutes.value[executable.name] ?? null,
                     path: getExecutablePath(executable),
                     segments: splitExecutableName(executable).length,
                     filename: getFilename(executable),
@@ -122,6 +144,7 @@ function handleLaunch(executable: GameExecutable) {
             emit('play', {
                 game: props.game,
                 executable: {
+                    timer_minutes: timerMinutes.value[executable.name] ?? null,
                     path: getExecutablePath(executable),
                     segments: splitExecutableName(executable).length,
                     filename: getFilename(executable),

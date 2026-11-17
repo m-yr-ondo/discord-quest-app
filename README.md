@@ -53,7 +53,7 @@ When launched/played, the tiny executables trigger Discord's Rich Presence/Regis
 The dummy game executale files used by this program are placed in a folder called  `games/` folder relative to the main application's exe. As of release build v2025.10.07 the dummy executable file size is around 250kb, it could be smaller but it requires the end-users to install .NET Framework Runtime (which is sometimes comes pre-installed on an up-to-date Windows 11 PC's, so for now the dummy exe using WinAPI through C++ for compatibility rather than C#
 
 
-## 🖥️ Supported Platforms
+## Supported Platforms
 
 - Windows 11 
 

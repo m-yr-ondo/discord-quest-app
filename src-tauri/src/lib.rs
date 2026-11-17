@@ -2,6 +2,7 @@ use once_cell::sync::OnceCell;
 use std::env;
 use std::path::Path;
 use std::sync::Mutex;
+use std::time::Duration;
 use tauri::{path::BaseDirectory, AppHandle, Emitter, Listener, Manager};
 
 mod rpc;
@@ -68,12 +69,14 @@ async fn create_fake_game(
 
 #[tauri::command(rename_all = "snake_case")]
 async fn run_background_process(
+    handle: AppHandle,
     name: &str,
     path: &str,
     executable_name: &str,
     _path_len: i64,
     app_id: i64,
-) -> Result<String, String> {
+    timer_minutes: Option<u64>,
+) -> Result<u32, String> {
     let exe_path = env::current_exe().unwrap_or_default();
     let exe_dir = exe_path.parent().unwrap_or_else(|| Path::new(""));
 
@@ -89,17 +92,35 @@ async fn run_background_process(
         .current_dir(game_folder_path)
         .spawn()
     {
-        Ok(_) => Ok("Process started successfully".to_string()),
+        Ok(child) => {
+            let process_id = child.id();
+
+            if let Some(minutes) = timer_minutes.filter(|minutes| *minutes > 0) {
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(Duration::from_secs(minutes * 60)).await;
+                    if terminate_process(process_id).is_ok() {
+                        let _ = handle.emit("game_process_stopped", process_id);
+                    }
+                });
+            }
+
+            Ok(process_id)
+        }
         Err(e) => Err(format!("Failed to start process: {}", e)),
     }
 }
 
 #[tauri::command(rename_all = "snake_case")]
-async fn stop_process(exec_name: String) -> Result<(), String> {
+async fn stop_process(process_id: u32) -> Result<(), String> {
+    terminate_process(process_id)
+}
+
+fn terminate_process(process_id: u32) -> Result<(), String> {
     let output = std::process::Command::new("taskkill")
         .arg("/F")
-        .arg("/IM")
-        .arg(exec_name)
+        .arg("/T")
+        .arg("/PID")
+        .arg(process_id.to_string())
         .output()
         .map_err(|e| format!("Failed to execute taskkill: {}", e))?;
 
@@ -211,7 +232,6 @@ async fn fetch_gamelist_gh_mirror() -> Result<String, String> {
 async fn fetch_gamelist_from_discord() -> Result<String, String> {
     fetch_game_list("https://discord.com/api/applications/detectable").await
 }
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

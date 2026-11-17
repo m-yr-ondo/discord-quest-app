@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, useTemplateRef, shallowRef, provide, nextTick, triggerRef, watch } from 'vue';
+import { ref, computed, useTemplateRef, shallowRef, provide, nextTick, triggerRef, watch, onMounted, onUnmounted } from 'vue';
 import { onClickOutside, refDebounced, tryOnMounted } from '@vueuse/core';
 import { useFuse } from '@vueuse/integrations/useFuse'
 import { invoke } from '@tauri-apps/api/core';
@@ -11,7 +11,7 @@ import GameExecutables from '@/components/GameExecutables.vue';
 import GameArtwork from '@/components/GameArtwork.vue';
 import { GameActionsKey } from '@/constants/constants';
 import { path } from '@tauri-apps/api';
-import { emit } from '@tauri-apps/api/event';
+import { emit, listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { useFetchGameList } from '@/composables/fetch-gamelist';
 import { UseFuseOptions } from '@vueuse/integrations';
 import Fuse from 'fuse.js';
@@ -60,6 +60,32 @@ const searchResultsIsOpen = ref(false);
 const isOnSearchResults = ref(false);
 
 const currentlyPlaying = ref<string | null>(null);
+let unlistenProcessStopped: UnlistenFn | undefined;
+
+onMounted(async () => {
+    unlistenProcessStopped = await listen<number>('game_process_stopped', ({ payload }) => {
+        for (const game of gameList.value) {
+            for (const executable of game.executables) {
+                if (executable.process_id === payload) {
+                    executable.is_running = false;
+                    executable.process_id = undefined;
+                    executable.timer_minutes = null;
+                    if (!game.executables.some((item) => item.is_running)) {
+                        game.is_running = false;
+                    }
+                    if (currentlyPlaying.value === game.id) {
+                        currentlyPlaying.value = null;
+                    }
+                    addLog('info', `Timer expired for game: ${game.name}`);
+                }
+            }
+        }
+    });
+});
+
+onUnmounted(() => {
+    unlistenProcessStopped?.();
+});
 
 
 onClickOutside(searchResultContainerRef, () => {
@@ -265,8 +291,11 @@ async function playGame({game, executable}: {game: Game, executable: GameExecuta
                 path_len: executable.segments,
                 app_id: Number(gameToPlay.id),
                 exec_path: path.join(executable.path!, executable.filename!),
+                timer_minutes: executable.timer_minutes ?? null,
             } 
-            await invoke('run_background_process', payload);
+            const processId = await invoke<number>('run_background_process', payload);
+            executableItem.process_id = processId;
+            executableItem.timer_minutes = executable.timer_minutes ?? null;
             gameToPlay.is_running = true;
             executableItem.is_running = true; 
         }
@@ -288,9 +317,14 @@ async function stopPlaying({game, executable}: {game: Game, executable: GameExec
     const gameToPlay = gameList.value.find(g => g.uid === gameUid);
     const executableItem = gameToPlay?.executables.find(exe => exe.name === executable.name);
     if (gameToPlay && executableItem) {
+        if (executableItem.process_id === undefined) {
+            gameToPlay.is_running = false;
+            executableItem.is_running = false;
+            return;
+        }
         try {
             await invoke('stop_process', {
-                exec_name: executable.filename!
+                process_id: executableItem.process_id,
             })
             addLog('info', `Stopped game process: ${game.name}`);
             addLog('info', `Stopped Executable: ${executable.name}`);
@@ -300,9 +334,13 @@ async function stopPlaying({game, executable}: {game: Game, executable: GameExec
             addLog('error', 'Failed to stop game process' + errorMessage);
             gameToPlay.is_running = false;
             executableItem.is_running = false;
+            executableItem.process_id = undefined;
+            executableItem.timer_minutes = null;
         } finally {
             gameToPlay.is_running = false;
             executableItem.is_running = false;
+            executableItem.process_id = undefined;
+            executableItem.timer_minutes = null;
         }
     }
 }
