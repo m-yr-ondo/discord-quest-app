@@ -1,84 +1,24 @@
 @import "tailwindcss";
 
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
 
 :root {
-  --app-bg: #f3f4f6;
-  --app-panel: #ffffff;
-  --app-panel-hover: #f3f4f6;
-  --app-text: #111827;
-  --app-text-muted: #6b7280;
-  --app-accent: #4f46e5;
-  --app-accent-hover: #4338ca;
-  --app-border: #e5e7eb;
-  --app-border-strong: #d1d5db;
-  --app-success: #16a34a;
-  --app-danger: #dc2626;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="neon"]):not([data-theme="ember"]):not([data-theme="obsidian"]) {
-    --app-bg: #111827;
-    --app-panel: #1f2937;
-    --app-panel-hover: #374151;
-    --app-text: #ffffff;
-    --app-text-muted: #9ca3af;
-    --app-accent: #818cf8;
-    --app-accent-hover: #a5b4fc;
-    --app-border: #374151;
-    --app-border-strong: #4b5563;
-    --app-success: #22c55e;
-    --app-danger: #ef4444;
-  }
-}
-
-[data-theme="neon"] {
+  color-scheme: dark;
   --app-bg: #000000;
-  --app-panel: #0d0d2b;
-  --app-panel-hover: #1a1a3e;
-  --app-text: #fafafa;
-  --app-text-muted: #9898b8;
-  --app-accent: #a855f7;
-  --app-accent-hover: #c084fc;
-  --app-border: #242452;
-  --app-border-strong: #37376b;
+  --app-panel: #0f1013;
+  --app-panel-hover: #15171b;
+  --app-text: #e6e8ee;
+  --app-text-muted: #9aa3b2;
+  --app-accent: #ff8a3d;
+  --app-accent-hover: #ffa05f;
   --app-success: #4ade80;
-  --app-danger: #f10000;
-}
-
-[data-theme="ember"] {
-  --app-bg: #000000;
-  --app-panel: #171514;
-  --app-panel-hover: #24201e;
-  --app-text: #f5ede4;
-  --app-text-muted: #a89a8c;
-  --app-accent: #6b2604;
-  --app-accent-hover: #eb5904;
-  --app-border: #342c28;
-  --app-border-strong: #4a3b33;
-  --app-success: #4ade80;
-  --app-danger: #f80202;
-}
-
-[data-theme="obsidian"] {
-  --app-bg: #000000;
-  --app-panel: #000000;
-  --app-panel-hover: #111111;
-  --app-text: #ffffff;
-  --app-text-muted: #9ca3af;
-  --app-accent: #7755ff;
-  --app-accent-hover: #68f774;
-  --app-border: #1f1f1f;
-  --app-border-strong: #2f2f2f;
-  --app-success: #9ca3af;
-  --app-danger: #ffffff;
+  --app-danger: #fb7185;
+  --app-dot-idle: #6b7384;
+  --app-dot-off: #3b4150;
+  --app-decor: #2c2f37;
+  --app-ring-track: #050506;
+  --app-fill-done: #4b5263;
 }
 
 @theme inline {
@@ -89,8 +29,29 @@
   --color-app-text-muted: var(--app-text-muted);
   --color-app-accent: var(--app-accent);
   --color-app-accent-hover: var(--app-accent-hover);
-  --color-app-border: var(--app-border);
-  --color-app-border-strong: var(--app-border-strong);
   --color-app-success: var(--app-success);
   --color-app-danger: var(--app-danger);
+  --color-app-dot-idle: var(--app-dot-idle);
+  --color-app-dot-off: var(--app-dot-off);
+  --color-app-decor: var(--app-decor);
+  --color-app-ring-track: var(--app-ring-track);
+  --color-app-fill-done: var(--app-fill-done);
+}
+
+@theme {
+  --shadow-raised: 8px 8px 16px #000000, -6px -6px 14px #24272d;
+  --shadow-raised-sm: 4px 4px 9px #000000, -3px -3px 8px #24272d;
+  --shadow-inset: inset 5px 5px 10px #000000, inset -4px -4px 9px #1f2227;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@utility neu-convex { background-image: linear-gradient(145deg, #17191d, #0b0c0e); }
+@utility neu-motion { transition: box-shadow 180ms ease, color 180ms ease, background-color 180ms ease; }
+
+html, body, #app { background: #000000; color: var(--app-text); }
+:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }

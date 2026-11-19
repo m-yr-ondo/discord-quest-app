@@ -15,7 +15,7 @@
 A Windows desktop application for Discord Rich Presence and completing Discord Quest for games without needing to install the full actual games/applications. Perfect for completing Discord Quests and showing off your gaming status without the storage burden.
 
 
-![Discord Quest App](<docs/Screenshot 2026-08-06 190414.png>)
+![Discord Quest App](docs/discord-quest-app.png)
 
 ---
 

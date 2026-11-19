@@ -1,72 +1,42 @@
 <script setup lang="ts">
 import { Pages, useGlobalState } from '@/composables/app-state';
-import IconRustLang from './IconRustLang.vue';
-import IconVueJs from './IconVueJs.vue';
 
-const appState = useGlobalState();
-const { page, setPage } = appState;
+const { page, setPage } = useGlobalState();
 
+const navigation = [
+  { page: Pages.HOME, label: 'Home' },
+  { page: Pages.GAME_CHAIN, label: 'Game Chain' },
+  { page: Pages.PLAYGROUND, label: 'Playground' },
+  { page: Pages.SETTINGS, label: 'Settings' },
+] as const;
 </script>
 
 <template>
-<div class="flex flex-col h-dvh overflow-hidden bg-app-bg">
-    <header class="bg-app-panel shadow-md">
-      <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <img src="/controller.png" alt="Discord Quest App logo" class="h-8 w-8" />
-          <h2 class="text-xl font-bold text-app-text"></h2>
+  <div class="flex h-dvh flex-col overflow-hidden bg-app-bg font-sans text-app-text">
+    <header class="mx-4 mt-4 shrink-0 rounded-[22px] bg-app-panel px-5 py-3.5 shadow-raised">
+      <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="grid size-11 place-items-center rounded-[14px] bg-app-panel shadow-inset" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="size-5 text-app-accent" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3 2.3 5 5.2.5-3.9 3.5 1.1 5.1-4.7-2.7-4.7 2.7 1.1-5.1-3.9-3.5L9.7 8 12 3Z" /></svg>
+          </div>
+          <h1 class="text-base font-bold tracking-[-0.01em]">Discord Quest App</h1>
         </div>
-        <nav>
-          <ul class="flex space-x-6">
-            <li>
-              <a href="#" 
-                class="text-app-text hover:text-app-accent-hover transition-colors"
-                :class="{ 'text-app-accent': page === Pages.HOME }"
-                @click.prevent="setPage(Pages.HOME)"
-              >
-                Home
-              </a>
-            </li> 
-            <li>
-              <a href="#"
-                class="text-app-text hover:text-app-accent-hover transition-colors"
-                :class="{ 'text-app-accent': page === Pages.GAME_CHAIN }"
-                @click.prevent="setPage(Pages.GAME_CHAIN)"
-              >
-                Chain
-              </a>
-            </li>
-            <li>
-              <a href="#" 
-                class="text-app-text hover:text-app-accent-hover transition-colors"
-                :class="{ 'text-app-accent': page === Pages.PLAYGROUND }"
-                @click.prevent="setPage(Pages.PLAYGROUND)"
-              >
-                Playground
-              </a>
-            </li>
-            <li>
-              <a href="#" 
-                class="text-app-text hover:text-app-accent-hover transition-colors"
-                :class="{ 'text-app-accent': page === Pages.SETTINGS }"
-                @click.prevent="setPage(Pages.SETTINGS)"
-              >
-                Settings
-              </a>
+        <nav aria-label="Primary navigation">
+          <ul class="flex flex-wrap justify-end gap-2">
+            <li v-for="item in navigation" :key="item.page">
+              <button
+                type="button"
+                class="neu-motion h-11 rounded-[14px] bg-app-panel px-5 text-[13px] font-medium"
+                :class="page === item.page ? 'shadow-inset font-semibold text-app-accent' : 'shadow-raised-sm text-app-text-muted hover:shadow-raised hover:text-app-text active:shadow-inset'"
+                :aria-current="page === item.page ? 'page' : undefined"
+                @click="setPage(item.page)"
+              >{{ item.label }}</button>
             </li>
           </ul>
         </nav>
       </div>
     </header>
-    
-    <main class="flex-grow overflow-y-auto hide-scrollbar">
-      <slot></slot>
-    </main>
-    
-    <footer class="bg-app-panel border-t border-app-border mt-auto">
-      <div class="container mx-auto px-4 py-4 text-center text-sm text-app-text-muted">
-        &copy; 2026
-      </div>
-    </footer>
+    <main class="flex-1 overflow-y-auto px-4 pb-4 pt-6 hide-scrollbar"><slot /></main>
+    <footer class="shrink-0 px-6 pb-4 text-center text-xs text-app-text-muted">&copy; 2026</footer>
   </div>
 </template>

@@ -4,7 +4,6 @@ import { onClickOutside, refDebounced } from '@vueuse/core';
 import { useFuse } from '@vueuse/integrations/useFuse'
 import { invoke } from '@tauri-apps/api/core';
 import { GameActionsProvider, GameExecutable, type Game } from '@/types/types';
-import IconVerified from '@/components/IconVerified.vue';
 import { isEmpty } from 'lodash-es';
 import GameExecutables from '@/components/GameExecutables.vue';
 import GameArtwork from '@/components/GameArtwork.vue';
@@ -16,7 +15,7 @@ import Fuse from 'fuse.js';
 import { useGlobalState } from '@/composables/app-state';
 import TimedNotification from '@/components/TimedNotification.vue';
 import { useGameLibrary } from '@/composables/game-library';
-
+ 
 
 type DialogKey = 
     'none' | 
@@ -39,7 +38,7 @@ const {
     removeGameFromList: removeLibraryGame,
     saveSavedGames: saveLibraryGames,
 } = useGameLibrary()
-const { addLog, theme } = useGlobalState();
+const { addLog, logs } = useGlobalState();
 const shouldShowNotificationContainer = computed(() => {
     return isLoadingGH.value || isLoadingDiscord.value || isLoadingBundled.value ||
            (isReadyGH.value || isReadyDiscord.value || isReadyBundled.value);
@@ -190,6 +189,13 @@ function isGameOnList(gameId: string) {
     return gameList.value.some((game) => game.id === gameId);
 }
 
+function openSavedGameFromSearch(game: Game) {
+    const savedGame = gameList.value.find((item) => item.id === game.id);
+    if (savedGame) {
+        selectGame(savedGame);
+    }
+}
+
 function toggleGameListSearch() {
     isGameListSearchOpen.value = !isGameListSearchOpen.value;
     if (!isGameListSearchOpen.value) {
@@ -210,6 +216,10 @@ function removeGameFromList(game: Game) {
 function selectGame(game: Game) {
     selectedGameId.value = game?.uid;
     searchResultsIsOpen.value = false;
+}
+
+function returnToLibrary() {
+    selectedGameId.value = null;
 }
 
 function canCreateDummyGame(game: Game | null) {
@@ -493,321 +503,22 @@ provide<GameActionsProvider>(GameActionsKey, {
 </script>
 
 <template>
-    <div class="container mx-auto px-4 py-8">
-        <dialog id="dialog" class="dialogStyle inset-0 bg-gray-800 bg-opacity-50
-        border border-app-border rounded-lg
-        transition-opacity duration-300 ease-in-out z-50
-        "
-        style="left: 50%; top: 50%; transform: translate(-50%, -50%)"
-        ref="dialogRef">
-            <div class="flex flex-col items-center justify-center p-6" >
-                <div class="mb-4 text-app-text-muted">
-                    <div v-if="dialogKey === 'rpc_message_1'">
-                        <p>
-                        This is only a feature in development.  
-                        </p>
-                        <p class="my-2">
-                            It works but due to the nature that it tricks Discord into thinking you are playing a game
-                            by sending an RPC using actual game ID rather than letting Discord detect you have a game/application running. 
-                        </p>
-                        <p>
-                        This may flag your account as suspicious for self-botting.
-                        </p>
-                    </div>
-
-                    <div v-if="dialogKey === 'no_game_selected'">
-                        <p>
-                            No game selected. Please select a game from the list on the left.
-                        </p>
-                    </div>
-                </div>
-                <div class="gap-2 flex">
-                    <button
-                    
-                    class="
-                text-app-text-muted hover:text-app-text 
-                border border-app-border rounded-lg px-4 py-1"
-                @click="hideDialog()">
-                    <span  v-if="dialogKey == 'rpc_message_1'">
-                        Cancel 
-                    </span>
-                    <span v-else>OK</span>
-                </button>
-                
-                <button 
-                v-if="dialogKey === 'rpc_message_1'"
-                class="text-app-text-muted hover:text-app-text 
-                border border-app-border rounded-lg px-4 py-1"
-                @click="continueRPCRisk(selectedGame)">
-                    Accept risk and continue
-                </button>
-                </div>
-            </div>
+    <div class="mx-auto max-w-[1600px]">
+        <dialog ref="dialogRef" class="fixed inset-0 m-auto w-[min(440px,calc(100%-2rem))] rounded-[28px] bg-app-panel p-[26px] text-app-text shadow-raised">
+            <div class="text-sm leading-6 text-app-text-muted"><template v-if="dialogKey === 'rpc_message_1'"><p>This feature is still in development.</p><p class="mt-3">It sends a Discord RPC using the selected game ID instead of waiting for a detected process.</p><p class="mt-3">This may flag your account as suspicious for self-botting.</p></template><p v-else>No game selected. Select a game from your library first.</p></div>
+            <div class="mt-6 flex justify-end gap-2"><button type="button" class="neu-motion h-11 rounded-[14px] bg-app-panel px-[18px] text-[13px] text-app-text-muted shadow-raised-sm hover:shadow-raised hover:text-app-text active:shadow-inset" @click="hideDialog">{{ dialogKey === 'rpc_message_1' ? 'Cancel' : 'OK' }}</button><button v-if="dialogKey === 'rpc_message_1'" type="button" class="neu-motion neu-convex h-11 rounded-[14px] bg-app-panel px-[18px] text-[13px] font-semibold text-app-accent shadow-raised-sm hover:shadow-raised hover:text-app-accent-hover active:shadow-inset" @click="continueRPCRisk(selectedGame)">Continue</button></div>
         </dialog>
-        <Transition 
-            enter-active-class="transition-opacity duration-300 delay-100 ease-in-out"
-            leave-active-class="transition-opacity duration-600 delay-100 ease-in-out"  
-            enter-from-class="opacity-0 translate-y-2 ease-in-out"
-            enter-to-class="opacity-100 translate-y-0 ease-in-out"
-        >
-            <div class="absolute top-20 left-4 z-20 " v-if="shouldShowNotificationContainer && !allFetchDone">
-                <Transition 
-                    enter-active-class="transition-opacity duration-300 delay-100 ease-in-out"
-                    leave-active-class="transition-opacity duration-600 delay-100 ease-in-out"  
-                    enter-from-class="opacity-0 translate-y-2 ease-in-out"
-                    enter-to-class="opacity-100 translate-y-0 ease-in-out"
-                >
-                    <div v-if="isLoadingGH" class="text-sm text-app-text-muted">
-                        Fetching game list from GitHub mirror... 
-                      <div class="border-full h-2 w-2 bg-green-500 rounded-full inline-block ml-2 animate-pulse"></div>
-                    </div>
-                </Transition>
-                <TimedNotification
-                    :is-ready="isReadyGH" 
-                    :duration="1500"
-                    container-class="text-sm text-app-text-muted"
-                > 
-                    Game list from mirror fetched
-                </TimedNotification>
-
-                <Transition 
-                    enter-active-class="transition-opacity duration-300 delay-100 ease-in-out"
-                    leave-active-class="transition-opacity duration-600 delay-100 ease-in-out"  
-                    enter-from-class="opacity-0 translate-y-2 ease-in-out"
-                    enter-to-class="opacity-100 translate-y-0 ease-in-out"
-                >
-                    <div v-if="isLoadingDiscord" class="text-sm text-app-text-muted">
-                        Fetching game list directly from Discord...
-                        <div class="border-full h-2 w-2 bg-green-500 rounded-full inline-block ml-2 animate-pulse"></div>
-                    </div>
-                </Transition>
-                <TimedNotification
-                    :is-ready="isReadyDiscord" 
-                    :duration="1500"
-                    container-class="text-sm text-app-text-muted"
-                > 
-                    Game list from Discord fetched
-                </TimedNotification>
-
-                
-                <Transition 
-                    enter-active-class="transition-opacity duration-300 delay-100 ease-in-out"
-                    leave-active-class="transition-opacity duration-600 delay-100 ease-in-out"  
-                    enter-from-class="opacity-0 translate-y-2 ease-in-out"
-                    enter-to-class="opacity-100 translate-y-0 ease-in-out"
-                >
-                    <div v-if="isLoadingBundled" class="text-sm text-app-text-muted">
-                        Fetching game list from bundled game list...
-                        <div class="border-full h-2 w-2 bg-green-500 rounded-full inline-block ml-2 animate-pulse"></div>
-                    </div>
-                </Transition>
-                <TimedNotification
-                    :is-ready="isReadyBundled" 
-                    :duration="1500"
-                    container-class="text-sm text-app-text-muted"
-                > 
-                    Game list from bundle pre-loaded
-                </TimedNotification>
-
-            </div>
-        </Transition>
-
-        <div class="mb-8">
-            <div class="relative" ref="searchResultContainerRef">
-               <div>
-<input v-model="searchQuery" type="text" placeholder="Search Discord Verified games..."
-                     class="w-full px-4 py-2 border border-app-border rounded-lg focus:ring-2 focus:ring-app-accent focus:border-app-accent bg-app-panel text-app-text"
-                     @focus="openSearchResults" @blur="handleSearchBlur" />
-
-                <button
-                    @click="fetchGameList()"
-                    class="absolute right-0 top-1/2 transform -translate-y-1/2 px-3 mr-2 py-1 text-sm bg-app-panel-hover hover:bg-app-border text-app-text rounded-md">
-                    <span class="wrap whitespace-nowrap text-xs">
-                        Refetch Game List
-                    </span>
-                </button>
-               </div>
-                <div v-if="searchResultsIsOpen" @click="isOnSearchResults = true"
-                    class="absolute z-50 mt-1 w-full bg-app-panel border border-app-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div v-if="searchResults.length > 0">
-                        <div v-for="game in searchResults" :key="game.item.id"
-                            class="p-3 hover:bg-app-panel-hover border-b border-app-border last:border-b-0">
-                            <div class="flex justify-between items-center gap-3">
-                                <div class="flex items-start gap-3 min-w-0">
-                                    <GameArtwork :game="game.item" class="w-10 h-10" />
-                                    <div class="min-w-0">
-                                    <div class="font-medium text-app-text">
-                                        {{ game.item.name }}
-                                    </div>
-                                    <div class="text-sm text-app-text-muted">ID: {{ game.item.id }}</div>
-                                    <div class="text-xs text-app-text-muted">
-                                        Executables:
-                                        <ul class="list-disc list-inside">
-                                            <li v-for="exe in game.item.executables" :key="exe.name"
-                                                class="text-app-text-muted">
-                                                <span class="font-mono">
-                                                {{ exe.name }}
-                                                ({{ exe.os }})</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    </div>
-                                </div>
-                                <button @click="addGameToList(game.item)"
-                                    :disabled="isGameOnList(game.item.id)"
-                                    class="ml-2 rounded-md px-3 py-1 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
-                                    :class="isGameOnList(game.item.id) ? 'bg-app-panel-hover' : 'bg-app-accent hover:bg-app-accent-hover'">
-                                    {{ isGameOnList(game.item.id) ? 'Added' : 'Add game to list' }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="searchResults.length === 0"
-                        class="p-3 hover:bg-app-panel-hover border-b border-app-border last:border-b-0 text-app-text-muted">
-                        Search for games by name. <br>
-                        Click "Add game to list" to add them to your selected games.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-            <div class="bg-app-panel p-4 rounded-lg shadow">
-                <div class="mb-4 flex items-center justify-between sticky top-0 bg-app-panel py-2 z-10">
-                    <h2 class="text-xl font-bold text-app-text">Games</h2>
-                    <button
-                        type="button"
-                        class="rounded-md p-2 text-app-text-muted hover:bg-app-panel-hover hover:text-app-text"
-                        aria-label="Search games in your list"
-                        @click="toggleGameListSearch"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <circle cx="11" cy="11" r="7" />
-                            <path d="m20 20-4-4" />
-                        </svg>
-                    </button>
-                </div>
-                <div v-if="isGameListSearchOpen" class="mb-4">
-                    <input
-                        v-model="gameListSearchQuery"
-                        type="search"
-                        placeholder="Search your games"
-                        class="w-full rounded-md border border-app-border bg-app-panel px-3 py-2 text-app-text outline-none focus:border-app-accent"
-                        aria-label="Search games in your list"
-                    />
-                </div>
-                <div v-if="gameList.length === 0" class="text-app-text-muted text-center py-8">
-                    No games selected. Search and add games from the search bar.
-                </div>
-                <div v-else-if="visibleGameList.length === 0" class="text-app-text-muted text-center py-8">
-                    No matching games in your list.
-                </div>
-                <div v-else class="space-y-4">
-                    <div v-for="game in visibleGameList" :key="game.id"
-                        class="p-3 border border-app-border rounded-lg
-                        hover:bg-app-panel-hover transition-colors 
-                        duration-200 ease-in-out" 
-                        :class="[
-                            {
-                                'ring-1 ring-app-accent/40 shadow-[0px_0px_8px_2px_#8e51ff50] bg-app-panel-hover': selectedGame?.uid === game.uid,
-                            }
-                        ]" @click="selectGame(game)"
-                    >
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <GameArtwork :game="game" class="w-10 h-10" />
-                                <div class="flex items-center gap-1 min-w-0">
-                                <div class="font-medium text-app-text">{{ game.name }}</div>
-                                <div class="relative inline-flex items-center">
-                                    <div class="w-2 h-2 bg-white absolute rounded-full" style="left: 50%; top: 50%; transform: translate(-50%, -50%)"></div>
-                                    <div class="relative inline-block">
-                                     <IconVerified
-                                         class="w-5 h-5"
-                                         :class="theme === 'obsidian' ? 'text-black' : 'text-app-accent'"
-                                     />
-                                    </div>
-                                </div>
-                                </div>
-                            </div>
-                            <button @click="removeGameFromList(game)" class="text-app-danger hover:text-red-400"
-                                v-if="!game.is_running"> 
-                                Remove
-                            </button>
-                        </div>
-                        <div class="flex space-x-2 mt-2">
-                            <div class="text-sm text-green-500 dark:text-green-400" v-if="game.is_running">
-                                Running
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-app-panel p-4 rounded-lg shadow md:sticky md:top-4 self-start" :key="forceRerenderKey">
-                <h2 class="text-xl font-bold text-app-text mb-4">Game Actions</h2>
-                <div class="space-y-4">
-                    <div class="text-app-text-muted mb-2 text-sm" v-if="!selectedGame || selectedGame === null">
-                        Select a game from the left to perform actions.
-                    </div>
-                    
-                    <div v-if="selectedGame" class="text-app-text-muted mb-4 text-sm">
-                        <GameArtwork :game="selectedGame" variant="cover" class="w-full h-28 mb-4" />
-                        <strong>Name:</strong> {{ selectedGame.name }}<br>
-                        <strong>ID:</strong> {{ selectedGame.id }}<br>
-                        <strong v-if="selectedGame.aliases && selectedGame.aliases.length > 0">Aliases:</strong>
-                        <ul v-if="selectedGame.aliases && selectedGame.aliases.length > 0" class="list-disc list-inside" >
-                            <li v-for="alias in selectedGame.aliases" :key="alias"
-                                class="text-app-text-muted">
-                                <span class="font-mono">{{ alias }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <button @click="handleTestRPC(selectedGame)"
-                        class="w-full py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white">
-                        {{ isConnecting || isConnectedToRPC ? 'Disconnect to Discord Gateway' : 'Test RPC' }}
-                    </button>
-
-                    <div class="border-t border-app-border my-4"></div>
-
-                    <GameExecutables v-if="selectedGame" :game="selectedGame" 
-                        @play="playGame"
-                        @stop="stopPlaying"
-                        @install_and_play="installAndPlay"
-                        @pause_timer="pauseTimer"
-                        @resume_timer="resumeTimer"
-                        @cancel_timer="cancelTimer"
-                    />
-
-                </div>
-
-                <div class="border-t border-app-border my-5"></div>
-
-                <div class="mt-6 p-4 border border-app-border rounded-lg">
-                    <h3 class="font-medium text-app-text mb-2">Status</h3>
-                    <div class="text-sm text-app-text-muted mb-2">
-                        Check Discord to see if it displays that you are playing a game.
-                    </div>
-                    <div v-if="currentlyPlaying" class="text-app-text-muted">
-                        Currently playing: <span class="text-green-600"> {{gameList.find(g => g.id ===
-                            currentlyPlaying)?.name }}</span>
-                    </div>
-                    <div v-else class="text-app-text-muted">
-                        Not playing any game
-                    </div>
-                </div>
-
-                <div v-if="selectedGame" class="my-4">
-                    <h3 class="font-medium text-app-text mb-2">Game Info</h3>
-                </div>
-            </div>
-        </div>
+        <aside v-if="shouldShowNotificationContainer && !allFetchDone" class="fixed left-8 top-28 z-20 space-y-2"><div v-if="isLoadingGH || isLoadingDiscord || isLoadingBundled" class="inline-flex h-13 items-center gap-3 rounded-[26px] bg-app-panel px-[22px] text-sm text-app-text-muted shadow-raised"><span class="size-2 rounded-full bg-app-success shadow-[0_0_8px_var(--app-success)]"/>Refreshing game list</div><TimedNotification :is-ready="isReadyGH || isReadyDiscord || isReadyBundled" :duration="1500" container-class="inline-flex h-13 items-center gap-3 rounded-[26px] bg-app-panel px-[22px] text-sm text-app-text shadow-raised"><span class="size-2 rounded-full bg-app-success shadow-[0_0_8px_var(--app-success)]"/>Game list refreshed</TimedNotification></aside>
+        <section v-if="selectedGame" class="mx-auto w-full max-w-3xl rounded-[28px] bg-app-panel p-6 shadow-raised" :key="forceRerenderKey"><button type="button" class="neu-motion mb-6 h-11 rounded-[14px] bg-app-panel px-[18px] text-[13px] font-medium text-app-text-muted shadow-raised-sm hover:shadow-raised hover:text-app-text active:shadow-inset" @click="returnToLibrary">← Back to library</button><div class="flex items-center gap-4"><GameArtwork :game="selectedGame" class="size-[88px]"/><div class="min-w-0"><h1 class="truncate text-[22px] font-bold">{{ selectedGame.name }}</h1><p class="mt-1 flex items-center gap-2 text-xs text-app-text-muted"><span class="text-app-accent" aria-hidden="true">✓</span>Verified by Discord</p></div></div><button type="button" class="neu-motion mt-5 h-11 w-full rounded-[14px] bg-app-panel px-[18px] text-[13px] text-app-text-muted shadow-raised-sm hover:shadow-raised hover:text-app-text active:shadow-inset" @click="handleTestRPC(selectedGame)">{{ isConnecting || isConnectedToRPC ? 'Disconnect Discord gateway' : 'Test RPC' }}</button><div class="mt-6"><GameExecutables :game="selectedGame" @play="playGame" @stop="stopPlaying" @install_and_play="installAndPlay" @pause_timer="pauseTimer" @resume_timer="resumeTimer" @cancel_timer="cancelTimer" /></div><div class="mt-6 rounded-[18px] bg-app-panel p-4 shadow-inset"><h2 class="text-xs font-semibold uppercase tracking-[0.06em] text-app-text-muted">Status</h2><p class="mt-2 text-sm text-app-text-muted"><template v-if="currentlyPlaying"><span class="mr-2 inline-block size-2 rounded-full bg-app-success shadow-[0_0_8px_var(--app-success)]"/>Running {{ gameList.find((game) => game.id === currentlyPlaying)?.name }}</template><template v-else>Not playing any game</template></p></div></section>
+        <template v-else>
+        <section class="mb-6 flex flex-wrap items-end justify-between gap-5"><div><h1 class="text-[30px] font-bold tracking-[-0.02em]">Library</h1><p class="mt-1 text-sm text-app-text-muted">{{ gameList.length }} games added</p></div><div ref="searchResultContainerRef" class="relative w-full max-w-sm"><div class="flex h-12 items-center gap-2.5 rounded-3xl bg-app-panel px-[18px] shadow-inset focus-within:outline-2 focus-within:outline-app-accent focus-within:outline-offset-[3px]"><svg class="size-4 shrink-0 text-app-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input v-model="searchQuery" type="search" placeholder="Search verified games" class="min-w-0 flex-1 appearance-none border-0 bg-transparent text-sm text-app-text outline-none ring-0 placeholder:text-app-text-muted focus:border-transparent focus:outline-none focus:ring-0 focus-visible:!outline-none" @focus="openSearchResults" @blur="handleSearchBlur"/><button type="button" class="text-xs text-app-accent hover:text-app-accent-hover" @click="fetchGameList">Refresh</button></div><div v-if="searchResultsIsOpen" class="absolute z-50 mt-3 max-h-80 w-full overflow-y-auto rounded-[18px] bg-app-panel p-3 shadow-inset" @click="isOnSearchResults = true"><div v-for="game in searchResults" :key="game.item.id" class="mb-2 flex items-center gap-3 rounded-[14px] bg-app-panel p-3 shadow-raised-sm last:mb-0" :class="isGameOnList(game.item.id) ? 'cursor-pointer hover:bg-app-panel-hover' : ''" :role="isGameOnList(game.item.id) ? 'button' : undefined" :tabindex="isGameOnList(game.item.id) ? 0 : undefined" @click="isGameOnList(game.item.id) && openSavedGameFromSearch(game.item)" @keydown.enter="isGameOnList(game.item.id) && openSavedGameFromSearch(game.item)" @keydown.space.prevent="isGameOnList(game.item.id) && openSavedGameFromSearch(game.item)"><GameArtwork :game="game.item" class="size-10"/><div class="min-w-0 flex-1"><p class="truncate text-sm font-medium">{{ game.item.name }}</p><p class="text-xs text-app-text-muted">{{ game.item.executables.length }} executables</p></div><button type="button" class="neu-motion neu-convex h-11 shrink-0 rounded-[14px] bg-app-panel px-3 text-[13px] font-semibold text-app-accent shadow-raised-sm disabled:opacity-45" :disabled="isGameOnList(game.item.id)" @click.stop="addGameToList(game.item)">{{ isGameOnList(game.item.id) ? 'Added' : 'Add' }}</button></div><p v-if="searchResults.length === 0" class="p-3 text-sm text-app-text-muted">Search for a game by name.</p></div></div></section>
+        <div><section><div class="mb-4 flex items-center justify-between"><h2 class="text-xl font-bold">Your games</h2><button type="button" class="neu-motion grid size-11 place-items-center rounded-full bg-app-panel text-app-text-muted shadow-raised-sm hover:shadow-raised hover:text-app-text active:shadow-inset" aria-label="Search your games" @click="toggleGameListSearch"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button></div><div v-if="isGameListSearchOpen" class="mb-5 flex h-12 items-center rounded-3xl bg-app-panel px-[18px] shadow-inset"><input v-model="gameListSearchQuery" type="search" placeholder="Search your library" class="w-full bg-transparent text-sm outline-none" aria-label="Search games in your list"/></div><p v-if="gameList.length === 0" class="rounded-[22px] bg-app-panel p-8 text-center text-sm text-app-text-muted shadow-raised">No games added. Search above to add one.</p><p v-else-if="visibleGameList.length === 0" class="text-center text-sm text-app-text-muted">No matching games.</p><div v-else class="grid gap-[22px] sm:grid-cols-2 md:grid-cols-3"><button v-for="game in visibleGameList" :key="game.id" type="button" class="neu-motion rounded-[22px] bg-app-panel p-3.5 text-left shadow-raised hover:shadow-raised-sm" :class="selectedGame?.uid === game.uid ? 'shadow-inset' : ''" @click="selectGame(game)"><GameArtwork :game="game" variant="cover" class="size-[88px]"/><div class="mt-3 flex items-start justify-between gap-2"><div class="min-w-0"><p class="truncate text-[15px] font-semibold" :class="selectedGame?.uid === game.uid ? 'text-app-accent' : ''">{{ game.name }}</p><p class="mt-1 flex items-center gap-2 text-xs text-app-text-muted"><span class="size-2 rounded-full" :class="game.is_running ? 'bg-app-success shadow-[0_0_8px_var(--app-success)]' : game.is_installed ? 'bg-app-dot-idle' : 'bg-app-dot-off'"/>{{ game.is_running ? 'Running' : game.is_installed ? 'Ready' : 'Not installed' }}</p></div><button v-if="!game.is_running" type="button" class="text-xs text-app-danger hover:text-app-text" @click.stop="removeGameFromList(game)">Remove</button></div></button></div></section></div>
+        <section class="mt-6 rounded-[20px] bg-app-panel px-5 py-4 font-mono text-xs leading-[1.8] text-app-text-muted shadow-inset"><p v-if="!logs.length">Activity log is empty.</p><p v-for="(log, index) in logs.slice(-5)" :key="index">{{ new Date(log.timestamp).toLocaleTimeString() }} {{ log.message }}</p></section>
+        </template>
     </div>
 </template>
 
-<style scoped>
-@reference "../theme/style.css";
 
-.dialogStyle::backdrop {
-    @apply bg-black/70 backdrop-blur-xs;
-}
+<style scoped>
+dialog::backdrop { background: rgb(0 0 0 / 70%); }
 </style>

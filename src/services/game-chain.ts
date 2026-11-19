@@ -1,4 +1,4 @@
-import type { TimerMinutes } from '@/constants/timers';
+import { isValidTimerMinutes, type TimerMinutes } from '@/constants/timers';
 
 export const GAME_CHAIN_STORAGE_KEY = 'discord-quest-completer:game-chain';
 
@@ -26,7 +26,7 @@ function isChainEntry(value: unknown): value is GameChainEntry {
     const entry = value as Record<string, unknown>;
     return typeof entry.gameId === 'string'
         && typeof entry.executableName === 'string'
-        && [2, 20, 45, 60, 120, 180, 300].includes(entry.timerMinutes as number);
+        && isValidTimerMinutes(entry.timerMinutes);
 }
 
 export function loadGameChain(storage: GameChainStorage = getBrowserStorage()): GameChainEntry[] {

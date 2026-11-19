@@ -1,11 +1,10 @@
-export const TIMER_OPTIONS = [
-    { minutes: 2, label: '2 min' },
-    { minutes: 20, label: '20 min' },
-    { minutes: 45, label: '45 min' },
-    { minutes: 60, label: '60 min' },
-    { minutes: 120, label: '120 min' },
-    { minutes: 180, label: '180 min' },
-    { minutes: 300, label: '300 min' },
-] as const;
+export const TIMER_PRESETS = [3, 5, 10, 15, 30] as const;
+export const MIN_TIMER_MINUTES = 1;
 
-export type TimerMinutes = typeof TIMER_OPTIONS[number]['minutes'];
+export type TimerMinutes = number;
+
+export function isValidTimerMinutes(value: unknown): value is TimerMinutes {
+    return typeof value === 'number'
+        && Number.isSafeInteger(value)
+        && value >= MIN_TIMER_MINUTES;
+}

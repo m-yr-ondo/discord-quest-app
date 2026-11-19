@@ -1,6 +1,5 @@
 import { createGlobalState } from '@vueuse/core'
 import { computed, ComputedRef, ShallowRef, shallowRef } from 'vue'
-import { loadSettings, saveSettings, type Theme } from '@/services/settings'
 
 export const Pages = {
     HOME: 'home',
@@ -26,8 +25,6 @@ export interface UseGlobalStateReturn {
         (newLog: string): void;
     };
     clearLogs: () => void,
-    theme: ShallowRef<Theme>,
-    setTheme: (newTheme: Theme) => void,
 }
 export const useGlobalState = createGlobalState(
   () => {
@@ -36,8 +33,6 @@ export const useGlobalState = createGlobalState(
     const logs = shallowRef<AppLogObject[]>([])
 
     const count = shallowRef(0)
-
-    const theme = shallowRef<Theme>(loadSettings().theme)
 
     const doubleCount = computed(() => count.value * 2)
 
@@ -48,21 +43,6 @@ export const useGlobalState = createGlobalState(
     function setPage(newPage: Pages) {
       page.value = newPage
     }
-
-    function applyThemeToDocument(newTheme: Theme) {
-      if (typeof document === 'undefined') {
-        return
-      }
-      document.documentElement.dataset.theme = newTheme
-    }
-
-    function setTheme(newTheme: Theme) {
-      theme.value = newTheme
-      applyThemeToDocument(newTheme)
-      saveSettings({ version: 1, theme: newTheme })
-    }
-
-    applyThemeToDocument(theme.value)
 
     function addLog(type: string | 'info' | 'error' | 'warning' | 'debug' , newLog?: string) {
       if (!newLog) {
@@ -86,8 +66,6 @@ export const useGlobalState = createGlobalState(
         logs,
         addLog,
         clearLogs,
-        theme,
-        setTheme,
     } as UseGlobalStateReturn
   }
 )

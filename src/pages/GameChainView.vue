@@ -4,7 +4,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { path } from '@tauri-apps/api';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import GameArtwork from '@/components/GameArtwork.vue';
-import { TIMER_OPTIONS, type TimerMinutes } from '@/constants/timers';
+import SearchField from '@/components/SearchField.vue';
+import type { TimerMinutes } from '@/constants/timers';
 import { useGameLibrary } from '@/composables/game-library';
 import { useGlobalState } from '@/composables/app-state';
 import { EXECUTABLE_OS } from '@/constants/constants';
@@ -15,6 +16,7 @@ import {
     type GameChainEntry,
 } from '@/services/game-chain';
 import type { Game, GameExecutable } from '@/types/types';
+import MinutePicker from '@/components/MinutePicker.vue';
 
 const {
     gameDB,
@@ -30,7 +32,8 @@ const selectedTimer = ref<TimerMinutes>(20);
 const searchQuery = ref('');
 const chainGameSearchQuery = ref('');
 const openGameMenu = ref(false);
-const openTimerMenu = ref(false);
+const showChainHelp = ref(false);
+const hasOpenedChainHelp = ref(false);
 const chainRunning = ref(false);
 const activeIndex = ref(-1);
 const activeProcessId = ref<number | undefined>();
@@ -63,6 +66,20 @@ const canAddGame = computed(() => Boolean(selectedGame.value)
     && chainEntries.value.length < 10
     && !chainRunning.value);
 
+function updateChainTimer(entry: GameChainEntry, minutes: number | null) {
+    if (minutes !== null) {
+        updateTimer(entry, minutes);
+    }
+}
+
+function toggleChainHelp() {
+    showChainHelp.value = !showChainHelp.value;
+
+    if (showChainHelp.value) {
+        hasOpenedChainHelp.value = true;
+    }
+}
+
 function saveChain() {
     saveGameChain(chainEntries.value);
 }
@@ -86,6 +103,16 @@ function addGameToSharedList(game: Game) {
     }
 }
 
+function selectCatalogGame(game: Game) {
+    const libraryGame = gameList.value.find((item) => item.id === game.id);
+    if (!libraryGame) {
+        return;
+    }
+
+    selectChainGame(libraryGame);
+    searchQuery.value = '';
+}
+
 function addGameToChain() {
     if (!canAddGame.value || !selectedGame.value) {
         return;
@@ -105,7 +132,6 @@ function addGameToChain() {
     selectedGameId.value = null;
     chainGameSearchQuery.value = '';
     openGameMenu.value = false;
-    openTimerMenu.value = false;
 }
 
 function selectChainGame(game: Game) {
@@ -310,164 +336,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container mx-auto px-4 py-8">
-        <div class="mb-6 rounded-lg border border-app-accent/40 bg-app-accent/10 p-4 text-app-text">
-            <h1 class="text-2xl font-bold">Chain</h1>
-            <p class="mt-2 text-app-text-muted">
-                Add games below, then choose up to 10 games to run in order. Each game is prepared automatically when its turn starts and advances when its timer expires.
-            </p>
-        </div>
-
-        <div class="mb-6 rounded-lg border border-app-border bg-app-panel p-4">
-            <input
-                v-model="searchQuery"
-                type="search"
-                placeholder="Search games to add"
-                class="w-full rounded-md border border-app-border bg-app-panel px-3 py-2 text-app-text outline-none focus:border-app-accent"
-                aria-label="Search games to add"
-            />
-            <div v-if="searchQuery.trim() && catalogResults.length > 0" class="mt-2 overflow-hidden rounded-md border border-app-border">
-                <div v-for="game in catalogResults" :key="game.id" class="flex items-center justify-between gap-3 border-b border-app-border p-3 last:border-b-0">
-                    <div class="flex min-w-0 items-center gap-3">
-                        <GameArtwork :game="game" class="h-9 w-9" />
-                        <span class="truncate text-app-text">{{ game.name }}</span>
-                    </div>
-                    <div class="flex shrink-0 gap-2">
-                        <span v-if="isGameOnList(game.id)" class="rounded-md bg-app-panel-hover px-2 py-1 text-xs text-app-text-muted">Added</span>
-                        <button
-                            v-else
-                            class="rounded-md bg-app-accent px-3 py-1 text-sm text-white hover:bg-app-accent-hover"
-                            @click="addGameToSharedList(game)"
-                        >
-                            Add to list
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div v-else-if="searchQuery.trim()" class="mt-3 text-sm text-app-text-muted">No matching games found.</div>
-        </div>
-
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <div class="text-app-text-muted">{{ chainEntries.length }}/10 games configured</div>
-            <div class="flex gap-2">
-                <button
-                    class="rounded-md border border-app-danger/50 px-3 py-2 text-app-danger hover:bg-app-panel-hover disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="chainEntries.length === 0"
-                    @click="deleteChain"
-                >
-                    Delete chain
-                </button>
-                <button
-                    v-if="!chainRunning"
-                    class="rounded-md bg-app-accent px-3 py-2 text-white hover:bg-app-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="chainEntries.length === 0"
-                    @click="startChain"
-                >
-                    Start chain
-                </button>
-                <button
-                    v-else
-                    class="rounded-md bg-app-danger px-3 py-2 text-white hover:bg-app-danger/80"
-                    @click="stopChain"
-                >
-                    Stop chain
-                </button>
-            </div>
-        </div>
-
-        <div v-if="chainGames.length === 0" class="mb-6 rounded-lg border border-app-border bg-app-panel p-6 text-center text-app-text-muted">
-            No games are in the shared list yet. Search above and add a game to begin building your chain.
-        </div>
-
-        <div v-else-if="!chainRunning && chainEntries.length < 10" class="mb-6 rounded-lg border border-app-border bg-app-panel p-4">
-            <h2 class="mb-3 text-lg font-semibold text-app-text">Add game</h2>
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="relative">
-                    <button
-                        type="button"
-                        class="inline-flex min-w-56 items-center justify-between gap-3 rounded-md border border-app-border bg-app-panel px-3 py-2 text-left text-app-text hover:bg-app-panel-hover"
-                        @click="openGameMenu = !openGameMenu"
-                    >
-                        <span class="truncate">{{ selectedGame?.name ?? 'Select a game from your list' }}</span>
-                        <span aria-hidden="true">▾</span>
-                    </button>
-                    <div v-if="openGameMenu" class="absolute left-0 top-full z-30 mt-1 w-72 overflow-hidden rounded-md border border-app-border bg-app-panel shadow-lg">
-                        <input
-                            v-model="chainGameSearchQuery"
-                            type="search"
-                            placeholder="Search your games"
-                            class="w-full border-b border-app-border bg-app-panel px-3 py-2 text-app-text outline-none focus:border-app-accent"
-                            aria-label="Search games in your list"
-                            @click.stop
-                        />
-                        <div class="max-h-56 overflow-y-auto">
-                            <button
-                                v-for="game in chainGameResults"
-                                :key="game.id"
-                                type="button"
-                                class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-app-text hover:bg-app-panel-hover disabled:cursor-not-allowed disabled:opacity-60"
-                                :disabled="chainEntries.some((entry) => entry.gameId === game.id)"
-                                @click="selectChainGame(game)"
-                            >
-                                <span class="truncate">{{ game.name }}</span>
-                                <span v-if="chainEntries.some((entry) => entry.gameId === game.id)" class="shrink-0 text-xs text-app-text-muted">Added</span>
-                            </button>
-                            <div v-if="chainGameResults.length === 0" class="px-3 py-2 text-sm text-app-text-muted">No matching games.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="relative">
-                    <button type="button" class="inline-flex items-center gap-2 rounded-md border border-app-border bg-app-panel px-3 py-2 text-app-text hover:bg-app-panel-hover" @click="openTimerMenu = !openTimerMenu">
-                        {{ TIMER_OPTIONS.find((option) => option.minutes === selectedTimer)?.label }}
-                        <span aria-hidden="true">▾</span>
-                    </button>
-                    <div v-if="openTimerMenu" class="absolute left-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-app-border bg-app-panel shadow-lg">
-                        <button
-                            v-for="option in TIMER_OPTIONS"
-                            :key="option.minutes"
-                            type="button"
-                            class="block w-full whitespace-nowrap px-3 py-1.5 text-left text-app-text hover:bg-app-panel-hover"
-                            :class="selectedTimer === option.minutes ? 'bg-app-accent text-white hover:bg-app-accent' : ''"
-                            :aria-pressed="selectedTimer === option.minutes"
-                            @click="selectedTimer = option.minutes; openTimerMenu = false"
-                        >
-                            {{ option.label }}
-                        </button>
-                    </div>
-                </div>
-
-                <button class="rounded-md bg-app-accent px-3 py-2 text-white hover:bg-app-accent-hover disabled:cursor-not-allowed disabled:opacity-50" :disabled="!canAddGame" @click="addGameToChain">
-                    Add game
-                </button>
-            </div>
-        </div>
-
-        <div v-if="chainEntries.length > 0" class="space-y-3">
-            <div v-for="(entry, index) in chainEntries" :key="entry.gameId" class="rounded-lg border p-4" :class="activeIndex === index ? 'border-app-accent bg-app-accent/10' : 'border-app-border bg-app-panel'">
-                <div class="flex flex-wrap items-center gap-3">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-app-panel-hover font-bold text-app-text">{{ index + 1 }}</div>
-                    <GameArtwork v-if="getGame(entry)" :game="getGame(entry)!" class="h-10 w-10" />
-                    <div class="min-w-40 flex-1">
-                        <div class="font-medium text-app-text">{{ getGame(entry)?.name ?? 'Unavailable game' }}</div>
-                        <div class="text-xs text-app-text-muted">{{ entry.executableName }}</div>
-                    </div>
-                    <select :value="entry.timerMinutes" class="rounded-md border border-app-border bg-app-panel px-2 py-1.5 text-app-text disabled:opacity-60" :disabled="chainRunning" @change="updateTimer(entry, Number(($event.target as HTMLSelectElement).value) as TimerMinutes)">
-                        <option v-for="option in TIMER_OPTIONS" :key="option.minutes" :value="option.minutes">{{ option.label }}</option>
-                    </select>
-                    <button class="rounded-md border border-app-danger/50 px-3 py-1.5 text-app-danger hover:bg-app-panel-hover disabled:cursor-not-allowed disabled:opacity-50" :disabled="chainRunning" @click="removeGameFromChain(index)">
-                        Remove
-                    </button>
-                </div>
-                <div v-if="activeIndex === index && remainingSeconds !== undefined" class="mt-3 flex flex-wrap items-center gap-3 text-sm text-app-text-muted">
-                    <span class="font-mono text-app-accent">Running · {{ formatRemaining(remainingSeconds) }} remaining</span>
-                    <span class="h-1.5 w-32 overflow-hidden rounded-full bg-app-panel-hover" aria-hidden="true"><span class="block h-full rounded-full bg-app-accent transition-[width] duration-1000" :style="{ width: `${timerProgress(entry)}%` }"></span></span>
-                </div>
-            </div>
-        </div>
-
-        <div v-else class="rounded-lg border border-app-border bg-app-panel p-8 text-center text-app-text-muted">
-            Add an installed game above to begin building your chain.
-        </div>
+    <div class="mx-auto grid max-w-[1600px] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <section class="rounded-[28px] bg-app-panel p-6 shadow-raised"><div class="flex flex-wrap items-start justify-between gap-4"><div><div class="flex items-center gap-2"><h1 class="text-[30px] font-bold tracking-[-0.02em]">Game Chain</h1><button type="button" class="neu-motion grid size-11 place-items-center rounded-full bg-app-panel text-app-accent shadow-raised-sm hover:shadow-raised active:shadow-inset" aria-label="How to use chained games" :aria-expanded="showChainHelp" @click="toggleChainHelp">?</button></div><p class="mt-1 text-sm text-app-text-muted">Games run back to back. Each starts when the previous timer ends.</p></div><p class="text-sm text-app-text-muted">{{ chainEntries.length }} of 10 slots used</p></div><div v-if="showChainHelp" class="mt-5 rounded-[18px] bg-app-panel p-4 text-sm leading-6 text-app-text-muted shadow-inset">Start the Quest for every game in Discord first, choose Desktop, then return here and start the chain. Discord detects each game as its timer begins.</div><div v-if="chainEntries.length" class="mt-6 rounded-[18px] bg-app-panel p-3 shadow-inset"><ol class="space-y-2"><li v-for="(entry, index) in chainEntries" :key="entry.gameId" class="rounded-[14px] bg-app-panel p-3 shadow-raised-sm"><div class="flex flex-wrap items-center gap-3"><div class="grid size-10 place-items-center rounded-full bg-app-panel text-sm font-bold shadow-inset">{{ index + 1 }}</div><GameArtwork v-if="getGame(entry)" :game="getGame(entry)!" class="size-10"/><div class="min-w-36 flex-1"><p class="text-[15px] font-semibold" :class="activeIndex === index ? 'text-app-accent' : ''">{{ getGame(entry)?.name ?? 'Unavailable game' }}</p><p class="font-mono text-xs text-app-text-muted">{{ entry.executableName }}</p></div><span class="text-xs text-app-text-muted"><span class="mr-2 inline-block size-2 rounded-full" :class="activeIndex === index ? 'bg-app-success shadow-[0_0_8px_var(--app-success)]' : 'bg-app-dot-off'"/>{{ activeIndex === index ? `Running · ${entry.timerMinutes} min` : `Queued · ${entry.timerMinutes} min` }}</span><MinutePicker :model-value="entry.timerMinutes" :disabled="chainRunning" :allow-none="false" @update:model-value="updateChainTimer(entry, $event)"/><button type="button" class="neu-motion grid size-11 place-items-center rounded-full bg-app-panel text-app-danger shadow-raised-sm hover:shadow-raised active:shadow-inset disabled:opacity-45" :disabled="chainRunning" aria-label="Remove from chain" @click="removeGameFromChain(index)">×</button></div><div class="mt-3 h-2.5 overflow-hidden rounded-[5px] bg-app-panel shadow-inset"><div class="h-full rounded-[5px]" :class="activeIndex === index ? 'bg-app-accent' : 'bg-app-fill-done'" :style="{ width: activeIndex === index ? `${timerProgress(entry)}%` : '0%' }"/></div></li></ol></div><div v-else class="mt-6 rounded-[18px] bg-app-panel p-8 text-center text-sm text-app-text-muted shadow-inset">Add an installed game to begin building your chain.</div><div class="mt-6 flex flex-wrap items-center justify-between gap-4"><p class="text-sm text-app-text-muted">Total {{ chainEntries.reduce((total, entry) => total + entry.timerMinutes, 0) }} min<span v-if="chainRunning && activeIndex >= 0"> · running step {{ activeIndex + 1 }} of {{ chainEntries.length }}</span></p><div class="flex gap-2"><button type="button" class="neu-motion h-11 rounded-[14px] bg-app-panel px-[18px] text-[13px] text-app-danger shadow-raised-sm hover:shadow-raised active:shadow-inset disabled:opacity-45" :disabled="chainEntries.length === 0" @click="deleteChain">Delete</button><button v-if="!chainRunning" type="button" class="neu-motion neu-convex h-[52px] rounded-[26px] bg-app-panel px-7 text-[15px] font-semibold text-app-accent shadow-raised-sm hover:shadow-raised hover:text-app-accent-hover active:shadow-inset disabled:opacity-45" :disabled="chainEntries.length === 0" @click="startChain">Start chain</button><button v-else type="button" class="neu-motion h-[52px] rounded-[26px] bg-app-panel px-7 text-[15px] font-semibold text-app-danger shadow-raised-sm hover:shadow-raised active:shadow-inset" @click="stopChain">Stop chain</button></div></div></section>
+        <aside class="self-start rounded-[28px] bg-app-panel p-6 shadow-raised"><div class="flex items-center justify-between gap-4"><h2 class="text-xl font-bold">Add to chain</h2><div class="w-1/2 shrink-0"><SearchField v-model="searchQuery" placeholder="Search verified games" aria-label="Search games to add"/></div></div><div class="mt-3"><div v-if="searchQuery.trim()" class="mt-3 rounded-[18px] bg-app-panel p-3 shadow-inset"><div v-for="game in catalogResults" :key="game.id" class="mb-2 flex items-center justify-between gap-3 rounded-[14px] bg-app-panel p-3 shadow-raised-sm last:mb-0" :class="isGameOnList(game.id) ? 'cursor-pointer hover:bg-app-panel-hover' : ''" :role="isGameOnList(game.id) ? 'button' : undefined" :tabindex="isGameOnList(game.id) ? 0 : undefined" @click="isGameOnList(game.id) && selectCatalogGame(game)" @keydown.enter="isGameOnList(game.id) && selectCatalogGame(game)" @keydown.space.prevent="isGameOnList(game.id) && selectCatalogGame(game)"><span class="truncate text-sm">{{ game.name }}</span><button v-if="!isGameOnList(game.id)" type="button" class="text-xs text-app-accent hover:text-app-accent-hover" @click.stop="addGameToSharedList(game)">Add</button><span v-else class="text-xs text-app-text-muted">Added · click to select</span></div><p v-if="catalogResults.length === 0" class="p-3 text-sm text-app-text-muted">No matching games found.</p></div></div><div v-if="chainGames.length" class="mt-6"><button type="button" class="neu-motion flex h-11 w-full items-center justify-between rounded-[14px] bg-app-panel px-[18px] text-left text-[13px] text-app-text-muted shadow-raised-sm hover:shadow-raised hover:text-app-text active:shadow-inset" @click="openGameMenu = !openGameMenu"><span class="truncate">{{ selectedGame?.name ?? 'Select a game from your library' }}</span><span aria-hidden="true">⌄</span></button><div v-if="openGameMenu" class="mt-3 rounded-[18px] bg-app-panel p-3 shadow-inset"><input v-model="chainGameSearchQuery" type="search" placeholder="Search your library" class="h-11 w-full rounded-[13px] bg-app-panel px-3 text-sm outline-none shadow-inset" @click.stop/><button v-for="game in chainGameResults" :key="game.id" type="button" class="mt-2 flex h-11 w-full items-center justify-between rounded-[13px] bg-app-panel px-3 text-left text-sm shadow-raised-sm disabled:opacity-45" :disabled="chainEntries.some((entry) => entry.gameId === game.id)" @click="selectChainGame(game)"><span class="truncate">{{ game.name }}</span><span v-if="chainEntries.some((entry) => entry.gameId === game.id)" class="text-xs text-app-text-muted">Added</span></button></div><p class="mt-6 text-xs font-semibold uppercase tracking-[0.06em] text-app-text-muted">Quest timer (minutes)</p><div class="mt-3"><MinutePicker v-model="selectedTimer" :allow-none="false" /></div><button type="button" class="neu-motion neu-convex mt-5 h-[52px] w-full rounded-[26px] bg-app-panel text-[15px] font-semibold text-app-accent shadow-raised-sm hover:shadow-raised hover:text-app-accent-hover active:shadow-inset disabled:opacity-45" :disabled="!canAddGame" @click="addGameToChain">Add game</button></div><p v-else class="mt-5 text-sm text-app-text-muted">Add games to your shared library before creating a chain.</p></aside>
     </div>
 </template>
