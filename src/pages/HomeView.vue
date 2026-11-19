@@ -165,7 +165,7 @@ const visibleGameList = computed(() => {
         .sort((first, second) => first.name.localeCompare(second.name));
 });
 
-const selectedGame = computed(() => {
+const selectedGame = computed<Game | null>(() => {
     if (!selectedGameId.value) return null;
     const found = gameList.value.find(g => g.uid === selectedGameId.value);
     console.log('selectedGame computed - selectedGameId:', selectedGameId.value, 'found:', found);
