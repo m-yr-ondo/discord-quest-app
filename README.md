@@ -112,5 +112,9 @@ Discord is a registered trademark of Discord Inc. It is referenced on this open-
 
 ---
 
+## Sakuga credits
+
+The Sakuga theme incorporates [Sakuga VFX](https://sakuga-vfx.vercel.app), created by [Justin Finkelman](https://github.com/finktheartist), under its [MIT License](https://github.com/finktheartist/sakuga-vfx/blob/main/LICENSE).
+
 
 

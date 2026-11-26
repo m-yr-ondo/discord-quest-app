@@ -6,7 +6,13 @@ import tailwindcss from '@tailwindcss/vite'
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue({
+    template: {
+      compilerOptions: {
+        isCustomElement: (tag) => tag.startsWith('sakuga-'),
+      },
+    },
+  }), tailwindcss()],
 
   resolve: {
     alias: {

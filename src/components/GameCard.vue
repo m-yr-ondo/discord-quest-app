@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SakugaButton from '@/components/SakugaButton.vue';
+
 const props = defineProps<{ title: string; description?: string; imageUrl?: string; launchId?: string }>();
 const emit = defineEmits(['launch']);
 function launchGame() { emit('launch', props.launchId); }
@@ -13,7 +15,7 @@ function launchGame() { emit('launch', props.launchId); }
     <div class="pt-3">
       <h3 class="text-[15px] font-semibold">{{ title }}</h3>
       <p v-if="description" class="mt-1 text-sm text-app-text-muted">{{ description }}</p>
-      <button type="button" class="neu-motion neu-convex mt-3 h-11 w-full rounded-[14px] bg-app-panel text-[13px] font-semibold text-app-accent shadow-raised-sm hover:shadow-raised hover:text-app-accent-hover active:shadow-inset" @click="launchGame">Launch</button>
+      <SakugaButton class="neu-motion neu-convex mt-3 h-11 w-full rounded-[14px] bg-app-panel text-[13px] font-semibold text-app-accent shadow-raised-sm hover:shadow-raised hover:text-app-accent-hover active:shadow-inset" @click="launchGame">Launch</SakugaButton>
     </div>
   </article>
 </template>

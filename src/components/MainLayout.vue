@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Pages, useGlobalState } from '@/composables/app-state';
+import { useTheme } from '@/composables/theme';
 
 const { page, setPage } = useGlobalState();
+const { theme } = useTheme();
 
 const navigation = [
   { page: Pages.HOME, label: 'Home' },
@@ -9,20 +11,24 @@ const navigation = [
   { page: Pages.PLAYGROUND, label: 'Playground' },
   { page: Pages.SETTINGS, label: 'Settings' },
 ] as const;
+
+function selectSakugaTab(event: Event) {
+  const nextPage = (event as CustomEvent<{ value: Pages }>).detail.value;
+  if (navigation.some((item) => item.page === nextPage)) {
+    setPage(nextPage);
+  }
+}
 </script>
 
 <template>
   <div class="flex h-dvh flex-col overflow-hidden bg-app-bg font-sans text-app-text">
-    <header class="mx-4 mt-4 shrink-0 rounded-[22px] bg-app-panel px-5 py-3.5 shadow-raised">
-      <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <div class="grid size-11 place-items-center rounded-[14px] bg-app-panel shadow-inset" aria-hidden="true">
-            <svg viewBox="0 0 24 24" class="size-5 text-app-accent" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3 2.3 5 5.2.5-3.9 3.5 1.1 5.1-4.7-2.7-4.7 2.7 1.1-5.1-3.9-3.5L9.7 8 12 3Z" /></svg>
-          </div>
-          <h1 class="text-base font-bold tracking-[-0.01em]">Discord Quest App</h1>
-        </div>
+    <header class="mx-4 mt-4 shrink-0">
+      <div class="mx-auto flex max-w-[1600px] justify-end">
         <nav aria-label="Primary navigation">
-          <ul class="flex flex-wrap justify-end gap-2">
+          <sakuga-tabs v-if="theme === 'sakuga'" label="Primary navigation" :selected="navigation.findIndex((item) => item.page === page)" @change="selectSakugaTab">
+            <option v-for="item in navigation" :key="item.page" :value="item.page">{{ item.label }}</option>
+          </sakuga-tabs>
+          <ul v-else class="flex flex-wrap justify-end gap-2">
             <li v-for="item in navigation" :key="item.page">
               <button
                 type="button"

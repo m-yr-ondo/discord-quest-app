@@ -19,6 +19,43 @@
   --app-decor: #2c2f37;
   --app-ring-track: #050506;
   --app-fill-done: #4b5263;
+  --app-line: transparent;
+  --app-shadow-raised: 8px 8px 16px #000000, -6px -6px 14px #24272d;
+  --app-shadow-raised-sm: 4px 4px 9px #000000, -3px -3px 8px #24272d;
+  --app-shadow-inset: inset 5px 5px 10px #000000, inset -4px -4px 9px #1f2227;
+  --app-convex: linear-gradient(145deg, #17191d, #0b0c0e);
+}
+
+:root[data-theme="sakuga"] {
+  color-scheme: dark;
+  --app-bg: #000000;
+  --app-panel: #0c0a13;
+  --app-panel-hover: #171222;
+  --app-text: #f5f0ff;
+  --app-text-muted: #a49ab9;
+  --app-accent: #ff5fa8;
+  --app-accent-hover: #ff89bf;
+  --app-success: #57d6a1;
+  --app-danger: #ff718d;
+  --app-dot-idle: #a99bff;
+  --app-dot-off: #403553;
+  --app-decor: #322947;
+  --app-ring-track: #060409;
+  --app-fill-done: #594878;
+  --app-line: #3d3155;
+  --app-shadow-raised: 0 0 0 1.5px var(--app-line), 7px 8px 0 #08060d;
+  --app-shadow-raised-sm: 0 0 0 1.5px var(--app-line), 4px 5px 0 #08060d;
+  --app-shadow-inset: inset 0 0 0 1.5px #282037, inset 3px 3px 8px #050308;
+  --app-convex: linear-gradient(145deg, #171021, #09070e);
+  --sk-card: #0c0a13;
+  --sk-ink: #f5f0ff;
+  --sk-dim: #a49ab9;
+  --sk-soft: #594878;
+  --sk-pri: #a99bff;
+  --sk-pri-ink: #110c1b;
+  --sk-acc: #ff5fa8;
+  --sk-track: #403553;
+  --sk-on-pri: #110c1b;
 }
 
 @theme inline {
@@ -39,18 +76,62 @@
 }
 
 @theme {
-  --shadow-raised: 8px 8px 16px #000000, -6px -6px 14px #24272d;
-  --shadow-raised-sm: 4px 4px 9px #000000, -3px -3px 8px #24272d;
-  --shadow-inset: inset 5px 5px 10px #000000, inset -4px -4px 9px #1f2227;
+  --shadow-raised: var(--app-shadow-raised);
+  --shadow-raised-sm: var(--app-shadow-raised-sm);
+  --shadow-inset: var(--app-shadow-inset);
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-@utility neu-convex { background-image: linear-gradient(145deg, #17191d, #0b0c0e); }
+@utility neu-convex { background-image: var(--app-convex); }
 @utility neu-motion { transition: box-shadow 180ms ease, color 180ms ease, background-color 180ms ease; }
 
-html, body, #app { background: #000000; color: var(--app-text); }
+html, body, #app { background: var(--app-bg); color: var(--app-text); }
 :focus-visible { outline: 2px solid var(--app-accent); outline-offset: 3px; }
+
+:root[data-theme="sakuga"] h1,
+:root[data-theme="sakuga"] h2 {
+  font-family: "Avenir Next", "Nunito", "Inter", system-ui, sans-serif;
+  font-style: italic;
+}
+
+:root[data-theme="sakuga"] .shadow-raised,
+:root[data-theme="sakuga"] .shadow-raised-sm,
+:root[data-theme="sakuga"] .shadow-inset {
+  box-shadow: var(--app-shadow-raised) !important;
+}
+
+:root[data-theme="sakuga"] .neu-convex {
+  background-image: none;
+}
+
+:root[data-theme="sakuga"] .bg-app-panel {
+  border-color: var(--app-line);
+}
+
+:root[data-theme="sakuga"] .max-w-\[1600px\] {
+  max-width: 1080px;
+}
+
+:root[data-theme="sakuga"] .btn-github {
+  background-color: #120d1d;
+  box-shadow: 6px 7px 0 var(--sk-soft);
+}
+
+:root[data-theme="sakuga"] .btn-github:hover {
+  background-color: #241835;
+  box-shadow: 6px 7px 0 var(--sk-acc);
+  color: #ffffff;
+  transform: translateY(-0.125rem);
+}
+
+:root[data-theme="sakuga"] .appearance-tooltip {
+  margin-top: 0;
+}
+
+:root[data-theme="sakuga"] .chain-help-tooltip {
+  margin-top: 0;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }

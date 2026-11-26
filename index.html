@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" style="background:#000">
+<html lang="en" style="background:var(--app-bg, #000)">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/controller.png" />
@@ -9,6 +9,19 @@
 
   <body>
     <div id="app"></div>
+    <script>
+      try {
+        const theme = localStorage.getItem('discord-quest-completer:theme');
+        if (theme === 'sakuga' || theme === 'anime') document.documentElement.dataset.theme = theme === 'anime' ? 'sakuga' : theme;
+      } catch {}
+    </script>
+    <script src="/sakuga-vfx/input.js"></script>
+    <script src="/sakuga-vfx/radio.js"></script>
+    <script src="/sakuga-vfx/button.js"></script>
+    <script src="/sakuga-vfx/progress.js"></script>
+    <script src="/sakuga-vfx/toast.js"></script>
+    <script src="/sakuga-vfx/tooltip.js"></script>
+    <script src="/sakuga-vfx/tabs.js"></script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

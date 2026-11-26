@@ -1,5 +1,12 @@
 <script setup lang="ts">
-defineProps<{
+import { onMounted, useTemplateRef, watch } from 'vue';
+import { useTheme } from '@/composables/theme';
+
+interface SakugaInputElement extends HTMLElement {
+  value: string;
+}
+
+const props = defineProps<{
   modelValue: string;
   placeholder: string;
   ariaLabel: string;
@@ -10,10 +17,41 @@ const emit = defineEmits<{
   focus: [event: FocusEvent];
   blur: [event: FocusEvent];
 }>();
+
+const inputRef = useTemplateRef<SakugaInputElement>('inputRef');
+const { theme } = useTheme();
+
+function emitValue(event: Event) {
+  emit('update:modelValue', (event.currentTarget as SakugaInputElement).value);
+}
+
+onMounted(() => {
+  if (inputRef.value) {
+    inputRef.value.value = props.modelValue;
+  }
+});
+
+watch(() => props.modelValue, (value) => {
+  if (inputRef.value && inputRef.value.value !== value) {
+    inputRef.value.value = value;
+  }
+});
 </script>
 
 <template>
-  <div class="search-field">
+  <sakuga-input
+    v-if="theme === 'sakuga'"
+    ref="inputRef"
+    class="sakuga-search-field"
+    type="search"
+    :value="modelValue"
+    :placeholder="placeholder"
+    :label="ariaLabel"
+    @input="emitValue"
+    @focus="emit('focus', $event)"
+    @blur="emit('blur', $event)"
+  />
+  <div v-else class="search-field">
     <span class="search-field__glow" aria-hidden="true" />
     <span class="search-field__dark-border" aria-hidden="true" />
     <span class="search-field__white" aria-hidden="true" />
@@ -45,6 +83,11 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+.sakuga-search-field {
+  display: block;
+  width: 100%;
+}
+
 /* Adapted from Uiverse.io by Lakshay-art. MIT License, Copyright 2026 Lakshay-art (Lakshay Gupta). */
 .search-field {
   position: relative;
@@ -58,11 +101,7 @@ const emit = defineEmits<{
 .search-field__dark-border,
 .search-field__white,
 .search-field__border {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 12px;
-  pointer-events: none;
+  display: none;
 }
 
 .search-field__glow {
@@ -134,7 +173,7 @@ const emit = defineEmits<{
 .search-field:focus-within .search-field__dark-border::before { transform: translate(-50%, -50%) rotate(442deg); transition-duration: 4s; }
 .search-field:focus-within .search-field__glow::before { transform: translate(-50%, -50%) rotate(420deg); transition-duration: 4s; }
 .search-field:focus-within .search-field__white::before { transform: translate(-50%, -50%) rotate(443deg); transition-duration: 4s; }
-.search-field:focus-within .search-field__border::before { transform: translate(-50%, -50%) rotate(430deg); transition-duration: 4s; }
+.search-field:focus-within .search-field__border::before { transform: translate(-50%, -50%) rotate(430deg); }
 
 .search-field__main {
   position: relative;
@@ -143,8 +182,9 @@ const emit = defineEmits<{
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: 10px;
-  background: #010201;
+  border-radius: 14px;
+  background: var(--app-panel);
+  box-shadow: var(--app-shadow-inset);
 }
 
 .search-field__main input {
@@ -162,20 +202,7 @@ const emit = defineEmits<{
 
 .search-field__main input::placeholder { color: #9aa3b2; opacity: 1; }
 .search-field__main input::-webkit-search-cancel-button { cursor: pointer; }
-.search-field__pink {
-  position: absolute;
-  top: 10px;
-  left: 5px;
-  width: 30px;
-  height: 20px;
-  border-radius: 50%;
-  background: #cf30aa;
-  filter: blur(20px);
-  opacity: 0.55;
-  pointer-events: none;
-  transition: opacity 700ms ease;
-}
-.search-field:hover .search-field__pink { opacity: 0; }
+.search-field__pink { display: none; }
 .search-field__icon {
   position: absolute;
   left: 15px;
