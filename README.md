@@ -38,49 +38,48 @@ Alternatively, you can follow the [development setup instructions](#-development
 > Webview2 is required to run the app. WebView2 comes preinstalled on Windows 11. On versions older than Windows 11 you may need to install it manually.
 > If you don't have it installed, you can download it from [here](https://developer.microsoft.com/en-us/microsoft-edge/webview2).
 
-### Linux (via Proton)
+### Linux
 
-The Windows build also runs on Linux through [Proton](https://github.com/ValveSoftware/Proton), so there is no separate Linux build to keep in sync. This path uses `umu-launcher` (shipped with [Heroic](https://heroicgameslauncher.com/)) plus a GE-Proton or Proton build that Steam is already managing.
+#### Requirements
+
+Building from source needs Rust, Node with pnpm, a C toolchain, WebKitGTK 4.1 and SDL2. The [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) list the packages for each distribution.
+
+The AppImage needs none of this. It carries its own copy of WebKitGTK.
+
+#### Debian and Ubuntu
+
+Install the package from [Releases](https://github.com/m-yr-ondo/discord-quest-app/releases/latest). It adds the app, a desktop entry and an icon, so the app appears in your application menu.
 
 ```bash
-git clone https://github.com/andomeder/discord-quest-app.git
-cd discord-quest-app
-./packaging/linux/install.sh
+sudo apt install ./Discord-Quest-App_*.deb
 ```
 
-That installs:
+#### Other distributions
 
-| What | Where |
-| --- | --- |
-| Proton prefix, WebView2 runtime and the app | `${XDG_DATA_HOME:-~/.local/share}/discord-quest-app/prefix` |
-| Launcher | `~/.local/bin/discord-quest-app` |
-| Menu entry | `${XDG_DATA_HOME:-~/.local/share}/applications/discord-quest-app.desktop` |
+Download the AppImage from [Releases](https://github.com/m-yr-ondo/discord-quest-app/releases/latest) and run the install script. It copies the AppImage to `~/.local/bin/discord-quest-app.AppImage` and writes `~/.local/share/applications/discord-quest-app.desktop`.
 
-Launch it with `discord-quest-app` or from the application menu.
+```bash
+./packaging/linux/install-appimage.sh ~/Downloads/Discord-Quest-App_*.AppImage
+```
 
-Requirements: `umu-run` (from `umu-launcher` or Heroic), a Proton or GE-Proton build, `curl`, and `mingw-w64` (used to build the dummy-game runner).
+Launch it from your application menu, or run `discord-quest-app.AppImage`.
 
-Overrides:
+#### Build from source
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `PROTONPATH` | Proton or GE-Proton directory to use | newest GE-Proton, then newest Steam Proton |
-| `UMU_RUN` | path to `umu-run` | `umu-run` on `PATH`, then Heroic's copy |
-| `WEBVIEW2_ARGS` | WebView2 browser arguments | `--no-sandbox --disable-gpu --in-process-gpu` |
-| `GS_ARGS` | opt into gamescope, e.g. `GS_ARGS="-W 1920 -H 1080 -f"` | unset |
-| `DQA_PREFIX`, `DQA_CACHE` | prefix and download locations | the XDG paths above |
+Install the requirements above, then:
 
-> [!WARNING]
-> Do not accept the app's own update prompt under Linux: it would run a Windows installer inside Wine. To update, re-run `install.sh` with `DQA_REFRESH=1`.
+```bash
+git clone https://github.com/m-yr-ondo/discord-quest-app.git
+cd discord-quest-app
+pnpm install
+pnpm run build:runner:linux
+pnpm run copy:runner:linux
+pnpm tauri build
+```
 
-> [!NOTE]
-> gamescope is not needed and is best avoided for this app. It upscales the app's own window to the monitor, which makes text soft, and it can hand the display to the dummy game's window, leaving the app hidden behind a black screen while the game runs. Leave `GS_ARGS` unset unless you deliberately want fullscreen game presentation.
+The bundles land in `src-tauri/target/release/bundle/`. Install the `.deb` with `apt install`, or install the AppImage with `packaging/linux/install-appimage.sh`.
 
-> [!NOTE]
-> The Windows dummy-game runner aborts under Wine when it cannot create a tray icon, so the Linux setup replaces it with a tray-free build that keeps its window hidden. Game detection reads the process name, which is what Discord uses, so a window is not required.
-
-> [!WARNING]
-> On Linux the app renders in software, so scrolling is not perfectly smooth. Detecting a game is verified; a quest actually completing on Linux is not.
+Under Wayland the window has no title bar. Close it with your compositor's keybind.
 
 
 ## ✨ Features
@@ -100,7 +99,7 @@ The dummy game executale files used by this program are placed in a folder calle
 ## Supported Platforms
 
 - Windows 11
-- Linux, using the Windows build under Proton (see [Linux (via Proton)](#linux-via-proton))
+- Linux, native build (see [Linux](#linux))
 
 
 ## Tech Stack

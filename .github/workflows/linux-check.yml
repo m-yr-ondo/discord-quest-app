@@ -1,0 +1,31 @@
+name: Linux Check
+
+on:
+  push:
+    branches: [feat/linux-support, main]
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux system deps (Tauri 2 + SDL2)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev \
+            libsdl2-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build src-linux runner
+        run: cargo build --release --manifest-path src-linux/Cargo.toml
+
+      - name: Copy runner into resources
+        run: cp src-linux/target/release/src-linux src-tauri/resources/src-linux
+
+      - name: Check Tauri backend (Linux)
+        run: cargo check --manifest-path src-tauri/Cargo.toml

@@ -1,6 +1,5 @@
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
-use std::env;
 use std::path::Path;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -30,6 +29,35 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+/// Bundled dummy-runner resource name (per platform; resolved via BaseDirectory::Resource).
+#[cfg(target_os = "windows")]
+const RUNNER_RESOURCE: &str = "data/src-win.exe";
+#[cfg(not(target_os = "windows"))]
+const RUNNER_RESOURCE: &str = "data/src-linux";
+
+/// Writable base directory for the generated "game" folders.
+/// Windows keeps the exe-adjacent layout; Linux installs (AppImage = read-only mount,
+/// deb = root-owned /usr) must use a per-user data dir.
+fn games_base_dir(handle: &tauri::AppHandle) -> std::path::PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        std::env::current_exe()
+            .unwrap_or_default()
+            .parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_default()
+            .join("games")
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        handle
+            .path()
+            .app_data_dir()
+            .unwrap_or_else(|_| std::env::temp_dir())
+            .join("games")
+    }
+}
+
 #[tauri::command(rename_all = "snake_case")]
 async fn create_fake_game(
     handle: tauri::AppHandle,
@@ -38,15 +66,9 @@ async fn create_fake_game(
     _path_len: i64,
     app_id: i64,
 ) -> Result<String, String> {
-    // Must create in the same directory as the executable to avoid permission issues
-    // Get the executable directory to look for config file
-    let exe_path: std::path::PathBuf = env::current_exe().unwrap_or_default();
-    let exe_dir = exe_path.parent().unwrap_or_else(|| Path::new(""));
-
     let normalized_path = Path::new(path).to_string_lossy().to_string();
 
-    let game_folder_path = exe_dir
-        .join("games")
+    let game_folder_path = games_base_dir(&handle)
         .join(app_id.to_string())
         .join(normalized_path);
 
@@ -64,16 +86,28 @@ async fn create_fake_game(
     };
     let resource_path = handle
         .path()
-        .resolve("data/src-win.exe", BaseDirectory::Resource)
+        .resolve(RUNNER_RESOURCE, BaseDirectory::Resource)
         .unwrap_or_default();
 
     println!("Creating dummy game executable: {:?}", resource_path);
     let target_executable_path = game_folder_path.join(executable_name);
     match std::fs::copy(&resource_path, &target_executable_path) {
-        Ok(_) => Ok(format!(
-            "Dummy executable copied to: {:?}",
-            target_executable_path
-        )),
+        Ok(_) => {
+            // Bundled resources lose their executable bit (deb, AppImage), and the
+            // copied runner has to be executable to be spawned.
+            #[cfg(not(target_os = "windows"))]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = std::fs::set_permissions(
+                    &target_executable_path,
+                    std::fs::Permissions::from_mode(0o755),
+                );
+            }
+            Ok(format!(
+                "Dummy executable copied to: {:?}",
+                target_executable_path
+            ))
+        }
         Err(e) => Err(format!("Failed to copy dummy executable: {}", e)),
     }
 }
@@ -88,13 +122,9 @@ async fn run_background_process(
     app_id: i64,
     timer_minutes: Option<u64>,
 ) -> Result<u32, String> {
-    let exe_path = env::current_exe().unwrap_or_default();
-    let exe_dir = exe_path.parent().unwrap_or_else(|| Path::new(""));
-
     let normalized_path = Path::new(path).to_string_lossy().to_string();
 
-    let game_folder_path = exe_dir
-        .join("games")
+    let game_folder_path = games_base_dir(&handle)
         .join(app_id.to_string())
         .join(normalized_path);
     let executable_path = game_folder_path.join(executable_name);
@@ -189,21 +219,50 @@ fn cancel_process_timer(process_id: u32) {
 }
 
 fn terminate_process(process_id: u32) -> Result<(), String> {
-    let output = std::process::Command::new("taskkill")
-        .arg("/F")
-        .arg("/T")
-        .arg("/PID")
-        .arg(process_id.to_string())
-        .output()
-        .map_err(|e| format!("Failed to execute taskkill: {}", e))?;
+    #[cfg(target_os = "windows")]
+    {
+        let output = std::process::Command::new("taskkill")
+            .arg("/F")
+            .arg("/T")
+            .arg("/PID")
+            .arg(process_id.to_string())
+            .output()
+            .map_err(|e| format!("Failed to execute taskkill: {}", e))?;
 
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(format!(
-            "Failed to stop process: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ))
+        if output.status.success() {
+            Ok(())
+        } else {
+            Err(format!(
+                "Failed to stop process: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ))
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        // Unix: SIGTERM first, escalate to SIGKILL if the child ignores it.
+        let pid = process_id.to_string();
+        let term = std::process::Command::new("kill")
+            .arg("-TERM")
+            .arg(&pid)
+            .output()
+            .map_err(|e| format!("Failed to execute kill: {}", e))?;
+        if term.status.success() {
+            return Ok(());
+        }
+        let kill = std::process::Command::new("kill")
+            .arg("-KILL")
+            .arg(&pid)
+            .output()
+            .map_err(|e| format!("Failed to execute kill -KILL: {}", e))?;
+        if kill.status.success() {
+            Ok(())
+        } else {
+            Err(format!(
+                "Failed to stop process: {}",
+                String::from_utf8_lossy(&kill.stderr)
+            ))
+        }
     }
 }
 

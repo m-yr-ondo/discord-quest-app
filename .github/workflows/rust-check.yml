@@ -62,13 +62,13 @@ jobs:
         env:
           GAME_LIST_URL: ${{ secrets.GAME_LIST_URL }}
         run: |
-          curl -L -o src/assets/gamelist.json $GAME_LIST_URL
-          if [ ! -f src/assets/gamelist.json ]; then
-            echo "Failed to download game list"
-            exit 1
+          if [ -n "$GAME_LIST_URL" ]; then
+            curl -L -o src/assets/gamelist.json "$GAME_LIST_URL"
+          else
+            echo "GAME_LIST_URL is not set, using the bundled game list"
           fi
           if [ ! -s src/assets/gamelist.json ]; then
-            echo "Game list is empty"
+            echo "Game list is missing or empty"
             exit 1
           fi
       

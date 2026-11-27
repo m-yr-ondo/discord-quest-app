@@ -1,0 +1,35 @@
+{
+  "app": {
+    "windows": [
+      {
+        "title": "Discord Quest App",
+        "width": 800,
+        "height": 600,
+        "backgroundColor": "#000000",
+        "decorations": false
+      }
+    ]
+  },
+  "bundle": {
+    "targets": [
+      "deb",
+      "appimage"
+    ],
+    "createUpdaterArtifacts": false,
+    "resources": {
+      "resources/src-linux": "data/src-linux"
+    },
+    "linux": {
+      "appimage": {
+        "files": {
+          "usr/lib/webkit2gtk-4.1/WebKitNetworkProcess": "webkit2gtk/WebKitNetworkProcess",
+          "usr/lib/webkit2gtk-4.1/WebKitWebProcess": "webkit2gtk/WebKitWebProcess",
+          "usr/lib/webkit2gtk-4.1/WebKitGPUProcess": "webkit2gtk/WebKitGPUProcess"
+        }
+      }
+    }
+  },
+  "build": {
+    "beforeBundleCommand": "sh packaging/linux/copy-webkit-helpers.sh"
+  }
+}

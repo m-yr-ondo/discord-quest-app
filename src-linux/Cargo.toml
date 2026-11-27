@@ -1,0 +1,23 @@
+[package]
+name = "src-linux"
+version = "0.1.0"
+edition = "2021"
+
+# Linux counterpart of `src-win`: opens a window titled with the game name so
+# Discord's game detection sees it running. Mirrors src-win's --title/--tray contract.
+[dependencies]
+sdl2 = "0.37"
+
+[[bin]]
+name = "src-linux"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+overflow-checks = false
+debug = false
+rpath = false
